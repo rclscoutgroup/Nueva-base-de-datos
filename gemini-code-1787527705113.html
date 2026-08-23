@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal RCL Scout Group</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilos para los Tooltips de Ayuda */
+        .tooltip { position: relative; display: inline-block; cursor: help; }
+        .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #1e293b; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 50; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 0.75rem; font-weight: normal; line-height: 1.4; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans">
+
+    <!-- LOGIN -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center px-4">
+        <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center border border-slate-200">
+            <div class="w-full h-2 bg-blue-900 absolute top-0 left-0 rounded-t-xl"></div>
+            <img src="https://santapolacf.es/images/ESCUDO3.png" alt="Escudo" class="h-28 mx-auto mb-5 drop-shadow-lg">
+            <h1 class="text-2xl font-black text-slate-900 mb-6">PORTAL DE OJEADORES</h1>
+            <form id="loginForm" class="space-y-4">
+                <input type="email" id="correo" placeholder="Correo asignado" required class="w-full px-4 py-3 rounded border outline-none focus:border-blue-600">
+                <input type="password" id="contrasena" placeholder="Contraseña" required class="w-full px-4 py-3 rounded border outline-none focus:border-blue-600">
+                <button type="submit" id="btnLogin" class="w-full bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 rounded shadow-md transition">Acceder al Sistema</button>
+            </form>
+            <p id="loginError" class="text-red-500 text-sm mt-4 font-medium hidden"></p>
+        </div>
+    </div>
+
+    <!-- PANTALLA OJEADOR -->
+    <div id="dashboard-screen" class="hidden min-h-screen flex flex-col">
+        <header class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-10">
+            <div class="flex items-center gap-3"><img src="https://santapolacf.es/images/ESCUDO3.png" class="h-10"><h1 class="text-lg font-bold">RCL SCOUT GROUP</h1></div>
+            <p id="nombreUsuario" class="font-bold bg-blue-800 px-4 py-1 rounded-full text-sm"></p>
+        </header>
+        
+        <main class="p-4 md:p-6 max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- COLUMNA IZQUIERDA: TAREA ACTIVA (Intacta) -->
+            <div class="lg:col-span-4 flex flex-col gap-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 relative">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-blue-600 rounded-l-xl"></div>
+                    <span class="bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 rounded-full text-xs font-bold uppercase">Tarea Activa</span>
+                    <h3 id="txtPartido" class="text-lg font-bold mt-4 text-slate-800"></h3>
+                    <p class="text-slate-600 text-sm mt-2 mb-5 bg-slate-50 p-2 rounded border">Objetivo: <span id="txtEquipo" class="font-bold text-slate-800"></span></p>
+                    <a id="btnVerPartido" href="#" target="_blank" class="flex items-center justify-center gap-2 w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded shadow-sm">▶️ Ver Partido</a>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
+                    <h4 class="font-bold mb-4 text-slate-800">📁 Entregar Archivos de Asignación</h4>
+                    <div class="space-y-4 mb-5">
+                        <div class="border border-dashed border-slate-300 p-3 rounded bg-slate-50">
+                            <label class="block text-sm font-bold text-slate-700 mb-2">📄 Informe (PDF)</label>
+                            <input type="file" id="filePdf" accept=".pdf" class="w-full text-xs text-slate-500">
+                        </div>
+                        <div class="border border-dashed border-slate-300 p-3 rounded bg-slate-50">
+                            <label class="block text-sm font-bold text-slate-700 mb-2">🎞️ Cortes (Vídeo)</label>
+                            <input type="file" id="fileVideo" accept="video/mp4,video/*" class="w-full text-xs text-slate-500">
+                        </div>
+                    </div>
+                    <button id="btnCompletar" onclick="subirArchivos()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded shadow-sm">Subir a Drive y Completar Tarea</button>
+                    <p id="mensajeExito" class="text-emerald-600 text-sm font-bold text-center mt-3 hidden">¡Archivos subidos!</p>
+                </div>
+            </div>
+
+            <!-- COLUMNA DERECHA: NUEVO FORMULARIO DE REGISTRO -->
+            <div class="lg:col-span-8 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                <div class="bg-blue-900 text-white p-4 flex justify-between items-center">
+                    <h2 class="font-bold text-lg">REGISTRO DE NUEVO JUGADOR</h2>
+                </div>
+                <div class="p-6 md:p-8 overflow-y-auto">
+                    <form id="formScouting" class="space-y-6">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-slate-100">
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">REC <span class="text-blue-500">(?)</span><span class="tooltiptext">FICHAR: Firmar ya.<br>RPC: Tener en cuenta.<br>NMA: Necesita análisis.<br>NCE: No da nivel.<br>SP: Supera posibilidades.</span></label><select id="rec" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="FICHAR">FICHAR</option><option value="RPC">RPC</option><option value="NMA">NMA</option><option value="NCE">NCE</option><option value="SP">SP</option></select></div>
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">NIVEL <span class="text-blue-500">(?)</span><span class="tooltiptext">NI: Inferior.<br>1: Suplente.<br>2: Rotación.<br>3: Titular.<br>4: Estrella.<br>NS: Supera Nivel.<br>AP: Alto Potencial.</span></label><select id="nivel" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="NI">NI</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="NS">NS</option><option value="AP">AP</option></select></div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-6 border-b border-slate-100">
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">NOMBRE <span class="text-blue-500">(?)</span><span class="tooltiptext">Primera mayúscula, resto minúscula.</span></label><input type="text" id="nombre" class="w-full px-3 py-2 border rounded autocapitalize outline-none focus:border-blue-600" required></div>
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">APELLIDO/S <span class="text-blue-500">(?)</span><span class="tooltiptext">Primera mayúscula, resto minúscula.</span></label><input type="text" id="apellidos" class="w-full px-3 py-2 border rounded autocapitalize outline-none focus:border-blue-600" required></div>
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">AÑO <span class="text-blue-500">(?)</span><span class="tooltiptext">Formato: '04</span></label><input type="text" id="ano" placeholder="ej: '04" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
+                            
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">POSICIÓN <span class="text-blue-500">(?)</span><span class="tooltiptext">Solo posiciones amarillas.</span></label><select id="pos" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="POR">POR</option><option value="DFC">DFC</option><option value="LD">LD</option><option value="LI">LI</option><option value="MC">MC</option><option value="MD">MD</option><option value="MI">MI</option><option value="MP">MP</option><option value="ED">ED</option><option value="EI">EI</option><option value="DR">DR</option><option value="DM">DM</option></select></div>
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">2POS <span class="text-blue-500">(?)</span><span class="tooltiptext">Posiciones amarillas o naranjas. Ej: CAI - DFCI</span></label><input type="text" id="pos2" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">PIE <span class="text-blue-500">(?)</span><span class="tooltiptext">D (Diestro), I (Zurdo), A (Ambidiestro)</span></label><select id="pie" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"><option value="">Seleccionar...</option><option value="D">D</option><option value="I">I</option><option value="A">A</option></select></div>
+                            
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1">ALTURA (cm)</label><input type="number" id="altura" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1">PESO (kg)</label><input type="number" id="peso" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1">NACIONALIDAD</label><input type="text" id="nacionalidad" value="ESP" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
+                        </div>
+
+                        <div class="space-y-4 pb-6 border-b border-slate-100">
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">ATRIBUTOS CLAVE <span class="text-blue-500">(?)</span><span class="tooltiptext">Cualidades principales, cortas.</span></label><input type="text" id="atributos" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">DESCRIPCIÓN <span class="text-blue-500">(?)</span><span class="tooltiptext">Estilo de juego, físico y opinión.</span></label><textarea id="descripcion" rows="3" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></textarea></div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 pb-6 border-b border-slate-100">
+                            <div class="md:col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">LIGA <span class="text-blue-500">(?)</span><span class="tooltiptext">Ej: 1ªFFCV - G4</span></label><input type="text" id="liga" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
+                            <div class="md:col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">EQUIPO</label><input type="text" id="equipo" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
+                            
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">NIVEL EQ. <span class="text-blue-500">(?)</span><span class="tooltiptext">0-10. El 5 es igual al nuestro.</span></label><input type="number" id="nivelEquipo" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">FECHA <span class="text-blue-500">(?)</span><span class="tooltiptext">Veces visto + fecha. Ej: 1-12SEP</span></label><input type="text" id="fecha" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">VALORACIÓN <span class="text-blue-500">(?)</span><span class="tooltiptext">Del 0 al 10 en incrementos de 0.5.</span></label><input type="number" id="val" step="0.5" class="w-full px-3 py-2 border rounded font-bold text-lg outline-none focus:border-blue-600 text-emerald-600" required></div>
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1">LINK FFCV</label><input type="url" id="link" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
+                        </div>
+
+                        <!-- ARCHIVOS INDIVIDUALES DEL JUGADOR -->
+                        <div class="bg-slate-50 p-4 rounded border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1">📄 Dossier Individual (PDF Opcional)</label><input type="file" id="jugadorPdf" accept=".pdf" class="w-full text-sm text-slate-500 bg-white border p-1 rounded"></div>
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1">📺 Link de Vídeo (YouTube, Hudl...)</label><input type="url" id="jugadorVideoUrl" placeholder="https://..." class="w-full px-3 py-2 border rounded text-sm outline-none focus:border-blue-600"></div>
+                        </div>
+
+                        <button type="submit" id="btnEnviarRegistro" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-4 rounded-lg shadow transition text-lg">REGISTRAR JUGADOR EN LA MATRIZ</button>
+                        <p id="mensajeExitoRegistro" class="text-center font-bold text-emerald-600 hidden mt-2">¡Jugador guardado en la Base de Datos!</p>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- PANTALLA ADMINISTRADOR -->
+    <div id="admin-screen" class="hidden min-h-screen flex flex-col bg-slate-100">
+        <header class="bg-slate-900 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-10">
+            <h1 class="text-lg font-bold">🛡️ DIRECCIÓN DEPORTIVA</h1>
+            <button onclick="cargarPanelAdmin(); cargarMatrizGlobal();" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded text-sm font-bold shadow transition">🔄 Actualizar Todo</button>
+        </header>
+
+        <main class="p-6 max-w-7xl mx-auto w-full space-y-8">
+            
+            <!-- COORDINACIÓN OJEADORES (Intacta) -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-slate-800 text-white px-6 py-3 border-b"><h2 class="font-bold text-sm">COORDINACIÓN DE TAREAS</h2></div>
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-xs font-bold">
+                        <tr><th class="px-6 py-3">Ojeador</th><th class="px-6 py-3">Estado de Entrega</th><th class="px-6 py-3">Partido Activo</th><th class="px-6 py-3 text-center">Acciones</th></tr>
+                    </thead>
+                    <tbody id="tablaAdmin" class="divide-y divide-slate-100">
+                        <tr><td colspan="4" class="px-6 py-10 text-center text-slate-500">Cargando datos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- NUEVA BASE DE DATOS GLOBAL -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="bg-blue-900 text-white px-6 py-3 border-b flex justify-between items-center">
+                    <h2 class="font-bold text-sm">BASE DE DATOS MATRIZ</h2>
+                </div>
+                
+                <!-- Buscador Básico (Fase 1) -->
+                <div class="bg-slate-50 p-4 border-b border-slate-200 flex gap-4">
+                    <input type="text" id="filtroTextoGlobal" placeholder="Buscar por nombre, equipo, liga..." class="w-full px-4 py-2 border rounded outline-none focus:border-blue-600 text-sm">
+                    <button onclick="filtrarMatrizGlobal()" class="bg-slate-800 text-white px-6 py-2 rounded font-bold text-sm shadow">Buscar</button>
+                </div>
+
+                <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-white sticky top-0 border-b border-slate-200 text-slate-600 uppercase text-xs font-bold z-10 shadow-sm">
+                            <tr><th class="px-4 py-3">Rec</th><th class="px-4 py-3">Nombre</th><th class="px-4 py-3">Año</th><th class="px-4 py-3">Pos</th><th class="px-4 py-3">Equipo</th><th class="px-4 py-3 text-center">Nota</th></tr>
+                        </thead>
+                        <tbody id="cuerpoMatrizGlobal" class="divide-y divide-slate-100">
+                            <tr><td colspan="6" class="px-6 py-10 text-center text-slate-500">Esperando conexión con la Base de Datos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- MODAL ASIGNAR PARTIDO (Intacto) -->
+    <div id="modalAsignar" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+            <h2 class="text-xl font-bold mb-4 border-b pb-2">Asignar Nuevo Partido</h2>
+            <p id="nombreAsignar" class="text-sm text-blue-600 font-bold mb-4"></p>
+            <input type="hidden" id="asignarFila">
+            <div class="space-y-4 mb-6">
+                <div><label class="block text-xs font-bold mb-1 text-slate-500">PARTIDO</label><input type="text" id="asigPartido" class="w-full px-3 py-2 border rounded text-sm outline-none"></div>
+                <div><label class="block text-xs font-bold mb-1 text-slate-500">EQUIPO A ANALIZAR</label><input type="text" id="asigEquipo" class="w-full px-3 py-2 border rounded text-sm outline-none"></div>
+                <div><label class="block text-xs font-bold mb-1 text-slate-500">LINK DEL VÍDEO</label><input type="text" id="asigLink" class="w-full px-3 py-2 border rounded text-sm outline-none"></div>
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <button onclick="cerrarModalAsignar()" class="bg-slate-200 px-4 py-2 rounded font-bold text-sm">Cancelar</button>
+                <button id="btnGuardarAsignacion" onclick="guardarAsignacion()" class="bg-slate-900 text-white px-5 py-2 rounded font-bold text-sm">Enviar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        // =========================================================================
+        // PEGA TUS ENLACES AQUÍ ABAJO
+        // =========================================================================
+        
+        const SCRIPT_URL_USERS = "https://script.google.com/macros/s/AKfycbxNQAdOPguxiqPQWSPuNHAUm3WO1_e5RnYO_PwtsZW03FycnfFbb389TOXzO0JV-7BN/exec"; // El intacto de usuarios
+        
+        const SCRIPT_URL_DB = "TU_NUEVO_ENLACE_DE_LA_MATRIZ_AQUI"; // El que te dará el script del Paso 1
+        
+        // =========================================================================
+
+        let datosUsuario = {};
+        let datosMatrizGlobal = [];
+
+        async function enviarA_Google(datos, url = SCRIPT_URL_USERS) {
+            const respuesta = await fetch(url, { method: "POST", body: JSON.stringify(datos), headers: { "Content-Type": "text/plain;charset=utf-8" }});
+            return await respuesta.json();
+        }
+
+        // --- LOGIN Y ARRANQUE ---
+        document.getElementById("loginForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            document.getElementById("btnLogin").innerText = "Conectando...";
+            const correo = document.getElementById("correo").value;
+            const contrasena = document.getElementById("contrasena").value;
+            
+            try {
+                const res = await enviarA_Google({ accion: "login", correo: correo, contrasena: contrasena }, SCRIPT_URL_USERS);
+                if(res.exito) {
+                    datosUsuario = res;
+                    document.getElementById("login-screen").classList.add("hidden");
+
+                    if(res.isAdmin) {
+                        document.getElementById("admin-screen").classList.remove("hidden");
+                        cargarPanelAdmin();
+                        cargarMatrizGlobal(); // Carga la BD automáticamente
+                    } else {
+                        document.getElementById("dashboard-screen").classList.remove("hidden");
+                        document.getElementById("nombreUsuario").innerText = `Analista: ${res.nombre}`;
+                        document.getElementById("txtPartido").innerText = res.partido || "Sin partido asignado";
+                        document.getElementById("txtEquipo").innerText = res.equipo || "-";
+                        
+                        const btnVid = document.getElementById("btnVerPartido");
+                        if(res.link && res.link.trim() !== "") {
+                            btnVid.href = res.link; btnVid.classList.remove("hidden");
+                        } else { btnVid.classList.add("hidden"); }
+                    }
+                } else { mostrarError("Credenciales incorrectas."); }
+            } catch (error) { mostrarError("Error de conexión."); }
+        });
+
+        function mostrarError(msg) {
+            document.getElementById("loginError").innerText = msg;
+            document.getElementById("loginError").classList.remove("hidden");
+            document.getElementById("btnLogin").innerText = "Acceder al Sistema";
+        }
+
+        // --- SUBIDA DE ARCHIVOS DE LA ASIGNACIÓN (INTACTA) ---
+        function leerBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader(); reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        async function subirArchivos() {
+            if(!datosUsuario.idCarpeta) return;
+            const btn = document.getElementById("btnCompletar"); btn.innerText = "Subiendo..."; btn.disabled = true;
+            const pdfFile = document.getElementById("filePdf").files[0]; const videoFile = document.getElementById("fileVideo").files[0];
+            
+            let payload = { accion: "subir_y_completar", fila: datosUsuario.fila, idCarpeta: datosUsuario.idCarpeta };
+            if(pdfFile) { payload.pdfBase64 = await leerBase64(pdfFile); payload.pdfNombre = pdfFile.name; }
+            if(videoFile) { payload.videoBase64 = await leerBase64(videoFile); payload.videoMime = videoFile.type; payload.videoNombre = videoFile.name; }
+            
+            const res = await enviarA_Google(payload, SCRIPT_URL_USERS);
+            if(res.exito) {
+                btn.innerText = "Completado"; btn.classList.replace("bg-emerald-600", "bg-slate-400");
+                document.getElementById("mensajeExito").classList.remove("hidden");
+            }
+        }
+
+        // --- NUEVO: FORMULARIO DE REGISTRO DE JUGADORES ---
+        document.querySelectorAll('.autocapitalize').forEach(input => { input.addEventListener('input', e => e.target.value = e.target.value.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase())); });
+        document.getElementById('ano')?.addEventListener('blur', e => { let val = e.target.value.trim(); if (val.length === 2 && !val.includes("'")) e.target.value = "'" + val; });
+
+        document.getElementById("formScouting")?.addEventListener("submit", async (e) => {
+            e.preventDefault(); 
+            const btn = document.getElementById("btnEnviarRegistro"); btn.innerText = "GUARDANDO..."; btn.disabled = true;
+            
+            const datosJugador = {
+                accion: "guardar_jugador", ojeador: datosUsuario.nombre || "Scout",
+                rec: document.getElementById('rec').value, nivel: document.getElementById('nivel').value,
+                nombre: document.getElementById('nombre').value, apellidos: document.getElementById('apellidos').value,
+                ano: document.getElementById('ano').value, pos: document.getElementById('pos').value,
+                pos2: document.getElementById('pos2').value, pie: document.getElementById('pie').value,
+                altura: document.getElementById('altura').value, peso: document.getElementById('peso').value,
+                nacionalidad: document.getElementById('nacionalidad').value, atributos: document.getElementById('atributos').value,
+                descripcion: document.getElementById('descripcion').value, liga: document.getElementById('liga').value,
+                equipo: document.getElementById('equipo').value, nivelEquipo: document.getElementById('nivelEquipo').value,
+                fecha: document.getElementById('fecha').value, val: document.getElementById('val').value, 
+                link: document.getElementById('link').value, linkVideo: document.getElementById('jugadorVideoUrl').value
+            };
+
+            const pdfJugador = document.getElementById("jugadorPdf").files[0];
+            if(pdfJugador) datosJugador.pdfBase64 = await leerBase64(pdfJugador);
+
+            try {
+                // Lo enviamos a SCRIPT_URL_DB (La matriz)
+                await enviarA_Google(datosJugador, SCRIPT_URL_DB);
+                document.getElementById('formScouting').reset();
+                document.getElementById('mensajeExitoRegistro').classList.remove('hidden');
+                setTimeout(() => document.getElementById('mensajeExitoRegistro').classList.add('hidden'), 4000);
+            } catch (error) { alert("Error guardando el jugador."); } 
+            finally { btn.innerText = "REGISTRAR JUGADOR EN LA MATRIZ"; btn.disabled = false; }
+        });
+
+        // --- PANEL ADMINISTRADOR: COORDINACIÓN (INTACTO) ---
+        async function cargarPanelAdmin() {
+            const tabla = document.getElementById("tablaAdmin");
+            const res = await enviarA_Google({ accion: "cargar_admin" }, SCRIPT_URL_USERS);
+            if(res.exito && res.datos) {
+                tabla.innerHTML = "";
+                res.datos.forEach(oj => {
+                    let bLeido = oj.leido ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold mr-2">👁️ Leído</span>` : `<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs font-bold mr-2">No Leído</span>`;
+                    let bComp = oj.completado ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs font-bold">✅ Completado</span>` : `<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-bold">⏳ Pendiente</span>`;
+                    let lCarpeta = oj.idCarpeta ? `https://drive.google.com/drive/folders/${oj.idCarpeta}` : '#';
+                    let infoTiempos = `<p class="text-xs text-slate-400 mt-1.5">📅 Asignado: <span class="text-slate-600 font-medium">${oj.fechaAsignacion}</span></p>`;
+                    if (oj.completado) infoTiempos += `<p class="text-xs text-emerald-600">⏱️ Entregado: <span class="font-bold">${oj.fechaEntrega}</span></p>`;
+                    let bEntregados = `<span class="inline-block mt-1 bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">🏆 ${oj.entregados} Informes</span>`;
+
+                    tabla.innerHTML += `
+                        <tr class="hover:bg-slate-50 border-b">
+                            <td class="px-6 py-4 font-bold text-slate-700">${oj.nombre}<br>${bEntregados}</td>
+                            <td class="px-6 py-4">${bLeido} ${bComp}</td>
+                            <td class="px-6 py-4"><p class="text-sm font-bold text-slate-800">${oj.partido || 'Libre'}</p><p class="text-xs text-slate-500">${oj.equipo || '-'}</p>${infoTiempos}</td>
+                            <td class="px-6 py-4 text-center space-x-1">
+                                <a href="${lCarpeta}" target="_blank" class="inline-block bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded text-xs font-bold transition">📁 Carpeta</a>
+                                <button onclick="abrirModalAsignar(${oj.fila}, '${oj.nombre}', '${oj.partido}', '${oj.equipo}', '${oj.link}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold shadow transition ml-2">🎯 Asignar</button>
+                            </td>
+                        </tr>`;
+                });
+            }
+        }
+
+        function abrirModalAsignar(fila, nombre, partido, equipo, link) { document.getElementById("asignarFila").value = fila; document.getElementById("nombreAsignar").innerText = `Para: ${nombre}`; document.getElementById("asigPartido").value = partido && partido !== 'undefined' ? partido : ""; document.getElementById("asigEquipo").value = equipo && equipo !== 'undefined' ? equipo : ""; document.getElementById("asigLink").value = link && link !== 'undefined' ? link : ""; document.getElementById("modalAsignar").classList.remove("hidden"); }
+        function cerrarModalAsignar() { document.getElementById("modalAsignar").classList.add("hidden"); }
+        async function guardarAsignacion() { const btn = document.getElementById("btnGuardarAsignacion"); btn.innerText = "Enviando..."; btn.disabled = true; await enviarA_Google({ accion: "asignar_tarea", fila: document.getElementById("asignarFila").value, partido: document.getElementById("asigPartido").value, equipo: document.getElementById("asigEquipo").value, link: document.getElementById("asigLink").value }, SCRIPT_URL_USERS); cerrarModalAsignar(); btn.innerText = "Enviar"; btn.disabled = false; cargarPanelAdmin(); }
+
+        // --- NUEVO: BASE DE DATOS GLOBAL ADMIN ---
+        async function cargarMatrizGlobal() {
+            try {
+                // Fetch al script doGet de la MATRIZ
+                const response = await fetch(SCRIPT_URL_DB);
+                const json = await response.json();
+                if(json.exito) {
+                    datosMatrizGlobal = json.datos.slice(1); // Quitamos la fila de títulos
+                    filtrarMatrizGlobal(); // Renderiza la tabla base
+                }
+            } catch(e) { console.log("Falta URL DB"); }
+        }
+
+        function filtrarMatrizGlobal() {
+            const txt = (document.getElementById('filtroTextoGlobal').value || "").toLowerCase();
+            const cuerpo = document.getElementById('cuerpoMatrizGlobal');
+            cuerpo.innerHTML = '';
+
+            const filtrados = datosMatrizGlobal.filter(fila => {
+                if(!fila[3]) return false; // Si no hay nombre
+                return fila.join(" ").toLowerCase().includes(txt);
+            });
+
+            if(filtrados.length === 0) {
+                cuerpo.innerHTML = `<tr><td colspan="6" class="px-6 py-4 text-center text-slate-500">No se encontraron resultados.</td></tr>`;
+                return;
+            }
+
+            // Renderizado tolerante a datos antiguos (imprime el texto tal cual)
+            filtrados.forEach(fila => {
+                let nomComp = fila[3] + " " + (fila[4] || "");
+                let colorRec = "bg-slate-200 text-slate-700";
+                if(fila[1] === "FICHAR") colorRec = "bg-emerald-100 text-emerald-800";
+                if(fila[1] === "RPC") colorRec = "bg-blue-100 text-blue-800";
+                
+                cuerpo.innerHTML += `
+                    <tr class="hover:bg-slate-50 border-b">
+                        <td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${colorRec}">${fila[1] || '-'}</span></td>
+                        <td class="px-4 py-3 font-bold">${nomComp}</td>
+                        <td class="px-4 py-3">${fila[5] || '-'}</td>
+                        <td class="px-4 py-3 font-bold">${fila[6] || '-'}</td>
+                        <td class="px-4 py-3 text-xs">${fila[15] || '-'}</td>
+                        <td class="px-4 py-3 text-center font-black">${fila[18] || '-'}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        document.getElementById('filtroTextoGlobal').addEventListener('input', filtrarMatrizGlobal);
+
+    </script>
+</body>
+</html>
