@@ -6,10 +6,12 @@
     <title>Portal RCL Scout Group</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Estilos para los Tooltips de Ayuda */
         .tooltip { position: relative; display: inline-block; cursor: help; }
         .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #1e293b; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 50; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 0.75rem; font-weight: normal; line-height: 1.4; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
         .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-btn.active { border-bottom: 4px solid #10b981; color: #10b981; font-weight: 900; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
@@ -36,47 +38,38 @@
             <p id="nombreUsuario" class="font-bold bg-blue-800 px-4 py-1 rounded-full text-sm"></p>
         </header>
         
-        <main class="p-4 md:p-6 max-w-[1600px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- COLUMNA IZQUIERDA: TAREA ACTIVA (Intacta) -->
+        <main class="p-4 md:p-6 max-w-[1400px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            
+            <!-- COLUMNA IZQUIERDA: TAREA ACTIVA (Recuadro inferior eliminado) -->
             <div class="lg:col-span-4 flex flex-col gap-6">
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 relative">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-blue-600 rounded-l-xl"></div>
-                    <span class="bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1 rounded-full text-xs font-bold uppercase">Tarea Activa</span>
-                    <h3 id="txtPartido" class="text-lg font-bold mt-4 text-slate-800"></h3>
+                <div id="cajaAsignacion" class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 relative">
+                    <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500 rounded-l-xl"></div>
+                    <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold uppercase">Asignación Actual</span>
+                    <h3 id="txtPartido" class="text-xl font-black mt-4 text-slate-800">Cargando...</h3>
                     <p class="text-slate-600 text-sm mt-2 mb-5 bg-slate-50 p-2 rounded border">Objetivo: <span id="txtEquipo" class="font-bold text-slate-800"></span></p>
-                    <a id="btnVerPartido" href="#" target="_blank" class="flex items-center justify-center gap-2 w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded shadow-sm">▶️ Ver Partido</a>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5">
-                    <h4 class="font-bold mb-4 text-slate-800">📁 Entregar Archivos de Asignación</h4>
-                    <div class="space-y-4 mb-5">
-                        <div class="border border-dashed border-slate-300 p-3 rounded bg-slate-50">
-                            <label class="block text-sm font-bold text-slate-700 mb-2">📄 Informe (PDF)</label>
-                            <input type="file" id="filePdf" accept=".pdf" class="w-full text-xs text-slate-500">
-                        </div>
-                        <div class="border border-dashed border-slate-300 p-3 rounded bg-slate-50">
-                            <label class="block text-sm font-bold text-slate-700 mb-2">🎞️ Cortes (Vídeo)</label>
-                            <input type="file" id="fileVideo" accept="video/mp4,video/*" class="w-full text-xs text-slate-500">
-                        </div>
+                    
+                    <div class="flex flex-col gap-3">
+                        <a id="btnVerPartido" href="#" target="_blank" class="flex items-center justify-center gap-2 w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded shadow-sm hidden">▶️ Ver Partido Asignado</a>
+                        <button id="btnCompletarOjeador" onclick="completarAsignacion()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded shadow-sm transition">✅ Completar Tarea</button>
                     </div>
-                    <button id="btnCompletar" onclick="subirArchivos()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded shadow-sm">Subir a Drive y Completar Tarea</button>
-                    <p id="mensajeExito" class="text-emerald-600 text-sm font-bold text-center mt-3 hidden">¡Archivos subidos!</p>
                 </div>
             </div>
 
-            <!-- COLUMNA DERECHA: NUEVO FORMULARIO DE REGISTRO -->
+            <!-- COLUMNA DERECHA: FORMULARIO -->
             <div class="lg:col-span-8 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                 <div class="bg-blue-900 text-white p-4 flex justify-between items-center">
                     <h2 class="font-bold text-lg">REGISTRO DE NUEVO JUGADOR</h2>
                 </div>
-                <div class="p-6 md:p-8 overflow-y-auto">
+                <div class="p-6 md:p-8">
                     <form id="formScouting" class="space-y-6">
                         
+                        <!-- SECCIÓN 1 -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-slate-100">
                             <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">REC <span class="text-blue-500">(?)</span><span class="tooltiptext">FICHAR: Firmar ya.<br>RPC: Tener en cuenta.<br>NMA: Necesita análisis.<br>NCE: No da nivel.<br>SP: Supera posibilidades.</span></label><select id="rec" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="FICHAR">FICHAR</option><option value="RPC">RPC</option><option value="NMA">NMA</option><option value="NCE">NCE</option><option value="SP">SP</option></select></div>
                             <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">NIVEL <span class="text-blue-500">(?)</span><span class="tooltiptext">NI: Inferior.<br>1: Suplente.<br>2: Rotación.<br>3: Titular.<br>4: Estrella.<br>NS: Supera Nivel.<br>AP: Alto Potencial.</span></label><select id="nivel" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="NI">NI</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="NS">NS</option><option value="AP">AP</option></select></div>
                         </div>
 
+                        <!-- SECCIÓN 2 -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-6 border-b border-slate-100">
                             <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">NOMBRE <span class="text-blue-500">(?)</span><span class="tooltiptext">Primera mayúscula, resto minúscula.</span></label><input type="text" id="nombre" class="w-full px-3 py-2 border rounded autocapitalize outline-none focus:border-blue-600" required></div>
                             <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">APELLIDO/S <span class="text-blue-500">(?)</span><span class="tooltiptext">Primera mayúscula, resto minúscula.</span></label><input type="text" id="apellidos" class="w-full px-3 py-2 border rounded autocapitalize outline-none focus:border-blue-600" required></div>
@@ -91,11 +84,13 @@
                             <div><label class="block text-sm font-bold text-slate-700 mb-1">NACIONALIDAD</label><input type="text" id="nacionalidad" value="ESP" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
                         </div>
 
+                        <!-- SECCIÓN 3 -->
                         <div class="space-y-4 pb-6 border-b border-slate-100">
                             <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">ATRIBUTOS CLAVE <span class="text-blue-500">(?)</span><span class="tooltiptext">Cualidades principales, cortas.</span></label><input type="text" id="atributos" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
                             <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">DESCRIPCIÓN <span class="text-blue-500">(?)</span><span class="tooltiptext">Estilo de juego, físico y opinión.</span></label><textarea id="descripcion" rows="3" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></textarea></div>
                         </div>
 
+                        <!-- SECCIÓN 4 -->
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 pb-6 border-b border-slate-100">
                             <div class="md:col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">LIGA <span class="text-blue-500">(?)</span><span class="tooltiptext">Ej: 1ªFFCV - G4</span></label><input type="text" id="liga" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
                             <div class="md:col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">EQUIPO</label><input type="text" id="equipo" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
@@ -127,45 +122,67 @@
             <button onclick="cargarPanelAdmin(); cargarMatrizGlobal();" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded text-sm font-bold shadow transition">🔄 Actualizar Todo</button>
         </header>
 
+        <!-- Navegación Admin -->
+        <nav class="bg-white shadow-sm border-b border-slate-200 flex justify-center gap-8 font-bold text-slate-500">
+            <button onclick="cambiarTab('admin', 'tab-coord')" class="tab-btn admin-tab active py-4 px-2 hover:text-emerald-600 transition">🛡️ Coordinación</button>
+            <button onclick="cambiarTab('admin', 'tab-bd')" class="tab-btn admin-tab py-4 px-2 hover:text-emerald-600 transition">📊 Base de Datos y Filtros</button>
+        </nav>
+
         <main class="p-6 max-w-7xl mx-auto w-full space-y-8">
             
-            <!-- COORDINACIÓN OJEADORES (Intacta) -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="bg-slate-800 text-white px-6 py-3 border-b"><h2 class="font-bold text-sm">COORDINACIÓN DE TAREAS</h2></div>
-                <table class="w-full text-left text-sm whitespace-nowrap">
-                    <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-xs font-bold">
-                        <tr><th class="px-6 py-3">Ojeador</th><th class="px-6 py-3">Estado de Entrega</th><th class="px-6 py-3">Partido Activo</th><th class="px-6 py-3 text-center">Acciones</th></tr>
-                    </thead>
-                    <tbody id="tablaAdmin" class="divide-y divide-slate-100">
-                        <tr><td colspan="4" class="px-6 py-10 text-center text-slate-500">Cargando datos...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- NUEVA BASE DE DATOS GLOBAL -->
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <div class="bg-blue-900 text-white px-6 py-3 border-b flex justify-between items-center">
-                    <h2 class="font-bold text-sm">BASE DE DATOS MATRIZ</h2>
-                </div>
-                
-                <!-- Buscador Básico (Fase 1) -->
-                <div class="bg-slate-50 p-4 border-b border-slate-200 flex gap-4">
-                    <input type="text" id="filtroTextoGlobal" placeholder="Buscar por nombre, equipo, liga..." class="w-full px-4 py-2 border rounded outline-none focus:border-blue-600 text-sm">
-                    <button onclick="filtrarMatrizGlobal()" class="bg-slate-800 text-white px-6 py-2 rounded font-bold text-sm shadow">Buscar</button>
-                </div>
-
-                <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
-                    <table class="w-full text-left text-sm whitespace-nowrap">
-                        <thead class="bg-white sticky top-0 border-b border-slate-200 text-slate-600 uppercase text-xs font-bold z-10 shadow-sm">
-                            <tr><th class="px-4 py-3">Rec</th><th class="px-4 py-3">Nombre</th><th class="px-4 py-3">Año</th><th class="px-4 py-3">Pos</th><th class="px-4 py-3">Equipo</th><th class="px-4 py-3 text-center">Nota</th></tr>
-                        </thead>
-                        <tbody id="cuerpoMatrizGlobal" class="divide-y divide-slate-100">
-                            <tr><td colspan="6" class="px-6 py-10 text-center text-slate-500">Esperando conexión con la Base de Datos...</td></tr>
-                        </tbody>
-                    </table>
+            <!-- ADMIN: COORDINACIÓN OJEADORES (Intacta) -->
+            <div id="tab-coord" class="tab-content admin-content active">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-slate-800 text-white px-6 py-3 border-b"><h2 class="font-bold text-sm">COORDINACIÓN DE TAREAS</h2></div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-xs font-bold">
+                                <tr><th class="px-6 py-3">Ojeador</th><th class="px-6 py-3">Estado de Entrega</th><th class="px-6 py-3">Partido Activo</th><th class="px-6 py-3 text-center">Acciones</th></tr>
+                            </thead>
+                            <tbody id="tablaAdmin" class="divide-y divide-slate-100">
+                                <tr><td colspan="4" class="px-6 py-10 text-center text-slate-500">Cargando datos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
+            <!-- ADMIN: BASE DE DATOS GLOBAL Y PAGINACIÓN -->
+            <div id="tab-bd" class="tab-content admin-content">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-blue-900 text-white px-6 py-3 border-b flex justify-between items-center">
+                        <h2 class="font-bold text-sm">BASE DE DATOS MATRIZ</h2>
+                    </div>
+                    
+                    <!-- Panel de Filtros -->
+                    <div class="p-4 border-b border-slate-200 bg-slate-50 grid grid-cols-1 md:grid-cols-6 gap-3">
+                        <div class="md:col-span-2"><label class="text-xs font-bold text-slate-500 uppercase">Buscar (Texto)</label><input type="text" id="filtroTexto" placeholder="Nombre, equipo, atributos..." class="w-full px-3 py-1.5 border rounded outline-none focus:border-blue-500 text-sm"></div>
+                        <div><label class="text-xs font-bold text-slate-500 uppercase">Posición</label><select id="filtroPos" class="w-full px-3 py-1.5 border rounded outline-none text-sm"><option value="">Todas</option><option value="POR">POR</option><option value="DFC">DFC</option><option value="LI">LI</option><option value="LD">LD</option><option value="MC">MC</option><option value="MD">MD</option><option value="MI">MI</option><option value="MP">MP</option><option value="ED">ED</option><option value="EI">EI</option><option value="DC">DC</option><option value="DM">DM</option></select></div>
+                        <div><label class="text-xs font-bold text-slate-500 uppercase">Recomendación</label><select id="filtroRec" class="w-full px-3 py-1.5 border rounded outline-none text-sm"><option value="">Todas</option><option value="FICHAR">FICHAR</option><option value="RPC">RPC</option><option value="NMA">NMA</option><option value="NCE">NCE</option><option value="SP">SP</option></select></div>
+                        <div><label class="text-xs font-bold text-slate-500 uppercase">Año</label><input type="text" id="filtroAno" placeholder="Ej: '04" class="w-full px-3 py-1.5 border rounded outline-none text-sm"></div>
+                        <div><label class="text-xs font-bold text-slate-500 uppercase">Pie</label><select id="filtroPie" class="w-full px-3 py-1.5 border rounded outline-none text-sm"><option value="">Todos</option><option value="D">Diestro</option><option value="I">Zurdo</option><option value="A">Ambidiestro</option></select></div>
+                        <div class="md:col-span-2 flex items-end"><button onclick="filtrarMatrizGlobal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-1.5 rounded shadow transition text-sm">Aplicar Filtros</button></div>
+                    </div>
+
+                    <div class="overflow-x-auto min-h-[400px]">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-white border-b border-slate-200 text-slate-600 uppercase text-xs font-bold">
+                                <tr><th class="px-4 py-3">Rec</th><th class="px-4 py-3">Nombre</th><th class="px-4 py-3">Año</th><th class="px-4 py-3">Pos</th><th class="px-4 py-3">Equipo</th><th class="px-4 py-3">Pie</th><th class="px-4 py-3 text-center">Nota</th></tr>
+                            </thead>
+                            <tbody id="cuerpoMatrizGlobal" class="divide-y divide-slate-100">
+                                <tr><td colspan="7" class="px-6 py-10 text-center text-slate-500">Esperando conexión con la Base de Datos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Paginación -->
+                    <div class="bg-slate-50 border-t border-slate-200 p-4 flex justify-between items-center text-sm font-bold text-slate-600">
+                        <button id="btnPrevPage" onclick="cambiarPagina(-1)" class="bg-white border border-slate-300 px-4 py-2 rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition">Anterior</button>
+                        <span id="txtInfoPaginacion">Página 1 de 1</span>
+                        <button id="btnNextPage" onclick="cambiarPagina(1)" class="bg-white border border-slate-300 px-4 py-2 rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition">Siguiente</button>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -190,24 +207,36 @@
     <!-- JAVASCRIPT -->
     <script>
         // =========================================================================
-        // PEGA TUS ENLACES AQUÍ ABAJO
+        // PEGA TUS ENLACES AQUÍ
         // =========================================================================
         
-        const SCRIPT_URL_USERS = "https://script.google.com/macros/s/AKfycbxNQAdOPguxiqPQWSPuNHAUm3WO1_e5RnYO_PwtsZW03FycnfFbb389TOXzO0JV-7BN/exec"; // El intacto de usuarios
-        
-        const SCRIPT_URL_DB = "https://script.google.com/macros/s/AKfycbwrr3ARTTDAFiSBIKkI1SdoQUQyZbT2K3Wd3yeWB2hAP1q462XlJYTmQxRJenQFM3rhng/exec"; // El que te dará el script del Paso 1
+        const SCRIPT_URL_USERS = "https://script.google.com/macros/s/AKfycbxNQAdOPguxiqPQWSPuNHAUm3WO1_e5RnYO_PwtsZW03FycnfFbb389TOXzO0JV-7BN/exec";
+        const SCRIPT_URL_DB = "https://script.google.com/macros/s/AKfycbwrr3ARTTDAFiSBIKkI1SdoQUQyZbT2K3Wd3yeWB2hAP1q462XlJYTmQxRJenQFM3rhng/exec"; 
         
         // =========================================================================
 
         let datosUsuario = {};
+        
+        // Variables para la paginación global
         let datosMatrizGlobal = [];
+        let datosFiltradosGlobal = [];
+        let currentPage = 1;
+        const itemsPerPage = 25;
 
+        // Utilidad Fetch
         async function enviarA_Google(datos, url = SCRIPT_URL_USERS) {
             const respuesta = await fetch(url, { method: "POST", body: JSON.stringify(datos), headers: { "Content-Type": "text/plain;charset=utf-8" }});
             return await respuesta.json();
         }
 
-        // --- LOGIN Y ARRANQUE ---
+        function cambiarTab(rol, tabId) {
+            document.querySelectorAll(`.${rol}-content`).forEach(el => el.classList.remove('active'));
+            document.querySelectorAll(`.${rol}-tab`).forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // --- LOGIN ---
         document.getElementById("loginForm").addEventListener("submit", async (e) => {
             e.preventDefault();
             document.getElementById("btnLogin").innerText = "Conectando...";
@@ -226,12 +255,12 @@
                         cargarMatrizGlobal(); // Carga la BD automáticamente
                     } else {
                         document.getElementById("dashboard-screen").classList.remove("hidden");
-                        document.getElementById("nombreUsuario").innerText = `Analista: ${res.nombre}`;
+                        document.getElementById("nombreUsuario").innerText = `Scout: ${res.nombre}`;
                         document.getElementById("txtPartido").innerText = res.partido || "Sin partido asignado";
                         document.getElementById("txtEquipo").innerText = res.equipo || "-";
                         
                         const btnVid = document.getElementById("btnVerPartido");
-                        if(res.link && res.link.trim() !== "") {
+                        if(res.link && res.link.trim() !== "" && res.link !== "undefined") {
                             btnVid.href = res.link; btnVid.classList.remove("hidden");
                         } else { btnVid.classList.add("hidden"); }
                     }
@@ -245,7 +274,7 @@
             document.getElementById("btnLogin").innerText = "Acceder al Sistema";
         }
 
-        // --- SUBIDA DE ARCHIVOS DE LA ASIGNACIÓN (INTACTA) ---
+        // --- FUNCIONES OJEADOR ---
         function leerBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader(); reader.readAsDataURL(file);
@@ -254,23 +283,15 @@
             });
         }
 
-        async function subirArchivos() {
-            if(!datosUsuario.idCarpeta) return;
-            const btn = document.getElementById("btnCompletar"); btn.innerText = "Subiendo..."; btn.disabled = true;
-            const pdfFile = document.getElementById("filePdf").files[0]; const videoFile = document.getElementById("fileVideo").files[0];
-            
-            let payload = { accion: "subir_y_completar", fila: datosUsuario.fila, idCarpeta: datosUsuario.idCarpeta };
-            if(pdfFile) { payload.pdfBase64 = await leerBase64(pdfFile); payload.pdfNombre = pdfFile.name; }
-            if(videoFile) { payload.videoBase64 = await leerBase64(videoFile); payload.videoMime = videoFile.type; payload.videoNombre = videoFile.name; }
-            
-            const res = await enviarA_Google(payload, SCRIPT_URL_USERS);
-            if(res.exito) {
-                btn.innerText = "Completado"; btn.classList.replace("bg-emerald-600", "bg-slate-400");
-                document.getElementById("mensajeExito").classList.remove("hidden");
-            }
+        async function completarAsignacion() {
+            const btn = document.getElementById("btnCompletarOjeador"); btn.innerText = "Completando..."; btn.disabled = true;
+            try { 
+                // Añadido idCarpeta por si tu script de usuarios lo requiere para no romperse
+                await enviarA_Google({ accion: "subir_y_completar", fila: datosUsuario.fila, idCarpeta: datosUsuario.idCarpeta || "null" }, SCRIPT_URL_USERS); 
+                document.getElementById("cajaAsignacion").innerHTML = "<h3 class='text-emerald-600 font-black text-xl text-center py-6'>✅ Tarea Completada con Éxito</h3>"; 
+            } catch(e) { btn.innerText = "Error. Reintentar"; btn.disabled = false; }
         }
 
-        // --- NUEVO: FORMULARIO DE REGISTRO DE JUGADORES ---
         document.querySelectorAll('.autocapitalize').forEach(input => { input.addEventListener('input', e => e.target.value = e.target.value.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase())); });
         document.getElementById('ano')?.addEventListener('blur', e => { let val = e.target.value.trim(); if (val.length === 2 && !val.includes("'")) e.target.value = "'" + val; });
 
@@ -296,7 +317,6 @@
             if(pdfJugador) datosJugador.pdfBase64 = await leerBase64(pdfJugador);
 
             try {
-                // Lo enviamos a SCRIPT_URL_DB (La matriz)
                 await enviarA_Google(datosJugador, SCRIPT_URL_DB);
                 document.getElementById('formScouting').reset();
                 document.getElementById('mensajeExitoRegistro').classList.remove('hidden');
@@ -305,7 +325,7 @@
             finally { btn.innerText = "REGISTRAR JUGADOR EN LA MATRIZ"; btn.disabled = false; }
         });
 
-        // --- PANEL ADMINISTRADOR: COORDINACIÓN (INTACTO) ---
+        // --- PANEL ADMINISTRADOR (COORDINACIÓN) ---
         async function cargarPanelAdmin() {
             const tabla = document.getElementById("tablaAdmin");
             const res = await enviarA_Google({ accion: "cargar_admin" }, SCRIPT_URL_USERS);
@@ -317,11 +337,10 @@
                     let lCarpeta = oj.idCarpeta ? `https://drive.google.com/drive/folders/${oj.idCarpeta}` : '#';
                     let infoTiempos = `<p class="text-xs text-slate-400 mt-1.5">📅 Asignado: <span class="text-slate-600 font-medium">${oj.fechaAsignacion}</span></p>`;
                     if (oj.completado) infoTiempos += `<p class="text-xs text-emerald-600">⏱️ Entregado: <span class="font-bold">${oj.fechaEntrega}</span></p>`;
-                    let bEntregados = `<span class="inline-block mt-1 bg-indigo-50 text-indigo-700 border border-indigo-100 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">🏆 ${oj.entregados} Informes</span>`;
 
                     tabla.innerHTML += `
                         <tr class="hover:bg-slate-50 border-b">
-                            <td class="px-6 py-4 font-bold text-slate-700">${oj.nombre}<br>${bEntregados}</td>
+                            <td class="px-6 py-4 font-bold text-slate-700">${oj.nombre}</td>
                             <td class="px-6 py-4">${bLeido} ${bComp}</td>
                             <td class="px-6 py-4"><p class="text-sm font-bold text-slate-800">${oj.partido || 'Libre'}</p><p class="text-xs text-slate-500">${oj.equipo || '-'}</p>${infoTiempos}</td>
                             <td class="px-6 py-4 text-center space-x-1">
@@ -337,55 +356,87 @@
         function cerrarModalAsignar() { document.getElementById("modalAsignar").classList.add("hidden"); }
         async function guardarAsignacion() { const btn = document.getElementById("btnGuardarAsignacion"); btn.innerText = "Enviando..."; btn.disabled = true; await enviarA_Google({ accion: "asignar_tarea", fila: document.getElementById("asignarFila").value, partido: document.getElementById("asigPartido").value, equipo: document.getElementById("asigEquipo").value, link: document.getElementById("asigLink").value }, SCRIPT_URL_USERS); cerrarModalAsignar(); btn.innerText = "Enviar"; btn.disabled = false; cargarPanelAdmin(); }
 
-        // --- NUEVO: BASE DE DATOS GLOBAL ADMIN ---
+        // --- PANEL ADMINISTRADOR (BASE DE DATOS Y PAGINACIÓN) ---
         async function cargarMatrizGlobal() {
             try {
-                // Fetch al script doGet de la MATRIZ
-                const response = await fetch(SCRIPT_URL_DB);
-                const json = await response.json();
-                if(json.exito) {
-                    datosMatrizGlobal = json.datos.slice(1); // Quitamos la fila de títulos
-                    filtrarMatrizGlobal(); // Renderiza la tabla base
+                // Nuevo sistema de carga super seguro por POST
+                const response = await enviarA_Google({ accion: "cargar_matriz" }, SCRIPT_URL_DB);
+                if(response.exito) {
+                    datosMatrizGlobal = response.datos.slice(1); 
+                    filtrarMatrizGlobal(); // Aplica filtros vacíos por defecto y pagina
                 }
-            } catch(e) { console.log("Falta URL DB"); }
+            } catch(e) { document.getElementById('cuerpoMatrizGlobal').innerHTML = `<tr><td colspan="7" class="px-6 py-4 text-center text-red-500 font-bold">Error de conexión.</td></tr>`; }
         }
 
         function filtrarMatrizGlobal() {
-            const txt = (document.getElementById('filtroTextoGlobal').value || "").toLowerCase();
+            const txt = (document.getElementById('filtroTexto').value || "").toLowerCase();
+            const pos = document.getElementById('filtroPos').value;
+            const rec = document.getElementById('filtroRec').value;
+            const ano = (document.getElementById('filtroAno').value || "").toLowerCase();
+            const pie = document.getElementById('filtroPie').value;
+
+            datosFiltradosGlobal = datosMatrizGlobal.filter(fila => {
+                if(!fila[3]) return false; // Evita filas vacías
+                const fTxt = fila.join(" ").toLowerCase().includes(txt);
+                const fPos = pos === "" || fila[6] === pos;
+                const fRec = rec === "" || fila[1] === rec;
+                const fAno = ano === "" || (fila[5]||"").toLowerCase().includes(ano);
+                const fPie = pie === "" || fila[10] === pie;
+                return fTxt && fPos && fRec && fAno && fPie;
+            });
+
+            currentPage = 1;
+            renderizarTablaPaginada();
+        }
+
+        function renderizarTablaPaginada() {
             const cuerpo = document.getElementById('cuerpoMatrizGlobal');
             cuerpo.innerHTML = '';
 
-            const filtrados = datosMatrizGlobal.filter(fila => {
-                if(!fila[3]) return false; // Si no hay nombre
-                return fila.join(" ").toLowerCase().includes(txt);
-            });
+            const inicio = (currentPage - 1) * itemsPerPage;
+            const fin = inicio + itemsPerPage;
+            const items = datosFiltradosGlobal.slice(inicio, fin);
 
-            if(filtrados.length === 0) {
-                cuerpo.innerHTML = `<tr><td colspan="6" class="px-6 py-4 text-center text-slate-500">No se encontraron resultados.</td></tr>`;
-                return;
+            if(items.length === 0) {
+                cuerpo.innerHTML = `<tr><td colspan="7" class="px-6 py-10 text-center text-slate-500">No se encontraron resultados con esos filtros.</td></tr>`;
+            } else {
+                items.forEach(fila => {
+                    let nomComp = fila[3] + " " + (fila[4] || "");
+                    let colorRec = "bg-slate-200 text-slate-700";
+                    if(fila[1] === "FICHAR") colorRec = "bg-emerald-100 text-emerald-800";
+                    if(fila[1] === "RPC") colorRec = "bg-blue-100 text-blue-800";
+                    if(fila[1] === "NCE") colorRec = "bg-red-100 text-red-800";
+                    
+                    cuerpo.innerHTML += `
+                        <tr class="hover:bg-slate-50 border-b">
+                            <td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${colorRec}">${fila[1] || '-'}</span></td>
+                            <td class="px-4 py-3 font-bold text-slate-800">${nomComp}</td>
+                            <td class="px-4 py-3 text-slate-600">${fila[5] || '-'}</td>
+                            <td class="px-4 py-3 font-bold text-slate-700">${fila[6] || '-'}</td>
+                            <td class="px-4 py-3 text-xs text-slate-600 truncate max-w-[150px]">${fila[15] || '-'}</td>
+                            <td class="px-4 py-3 text-slate-700">${fila[10] || '-'}</td>
+                            <td class="px-4 py-3 text-center font-black text-emerald-600">${fila[18] || '-'}</td>
+                        </tr>
+                    `;
+                });
             }
-
-            // Renderizado tolerante a datos antiguos (imprime el texto tal cual)
-            filtrados.forEach(fila => {
-                let nomComp = fila[3] + " " + (fila[4] || "");
-                let colorRec = "bg-slate-200 text-slate-700";
-                if(fila[1] === "FICHAR") colorRec = "bg-emerald-100 text-emerald-800";
-                if(fila[1] === "RPC") colorRec = "bg-blue-100 text-blue-800";
-                
-                cuerpo.innerHTML += `
-                    <tr class="hover:bg-slate-50 border-b">
-                        <td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${colorRec}">${fila[1] || '-'}</span></td>
-                        <td class="px-4 py-3 font-bold">${nomComp}</td>
-                        <td class="px-4 py-3">${fila[5] || '-'}</td>
-                        <td class="px-4 py-3 font-bold">${fila[6] || '-'}</td>
-                        <td class="px-4 py-3 text-xs">${fila[15] || '-'}</td>
-                        <td class="px-4 py-3 text-center font-black">${fila[18] || '-'}</td>
-                    </tr>
-                `;
-            });
+            actualizarBotonesPaginacion();
         }
 
-        document.getElementById('filtroTextoGlobal').addEventListener('input', filtrarMatrizGlobal);
+        function actualizarBotonesPaginacion() {
+            const totalPages = Math.ceil(datosFiltradosGlobal.length / itemsPerPage) || 1;
+            document.getElementById("txtInfoPaginacion").innerText = `Página ${currentPage} de ${totalPages} (${datosFiltradosGlobal.length} jugadores)`;
+            document.getElementById("btnPrevPage").disabled = currentPage === 1;
+            document.getElementById("btnNextPage").disabled = currentPage === totalPages;
+        }
+
+        function cambiarPagina(delta) {
+            const totalPages = Math.ceil(datosFiltradosGlobal.length / itemsPerPage) || 1;
+            currentPage += delta;
+            if(currentPage < 1) currentPage = 1;
+            if(currentPage > totalPages) currentPage = totalPages;
+            renderizarTablaPaginada();
+        }
 
     </script>
 </body>
