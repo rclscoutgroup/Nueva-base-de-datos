@@ -8,17 +8,59 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
-        .tooltip { position: relative; display: inline-block; cursor: help; }
-        .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #1e293b; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 50; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 0.75rem; font-weight: normal; line-height: 1.4; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+        /* TOOLTIPS RESTAURADOS */
+        .tooltip-container { position: relative; display: inline-flex; align-items: center; cursor: help; }
+        .tooltip-container .tooltiptext { visibility: hidden; width: max-content; max-width: 250px; background-color: #1e293b; color: #fff; text-align: center; border-radius: 6px; padding: 6px 12px; position: absolute; z-index: 9999; bottom: 130%; left: 50%; transform: translateX(-50%); opacity: 0; transition: opacity 0.3s; font-size: 0.75rem; font-weight: normal; line-height: 1.4; box-shadow: 0 4px 6px rgba(0,0,0,0.3); white-space: normal; }
+        .tooltip-container .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #1e293b transparent transparent transparent; }
+        .tooltip-container:hover .tooltiptext { visibility: visible; opacity: 1; }
+        
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .tab-btn.active { border-bottom: 4px solid #10b981; color: #10b981; font-weight: 900; }
+
+        /* PITCH SCOUTDECISIÓN STYLE */
+        .sd-pitch { background-color: #15b358; position: relative; border: 4px solid white; border-radius: 8px; width: 100%; height: 750px; margin-top: 10px; display: flex; flex-direction: column; justify-content: space-evenly; padding: 20px 0; }
+        .sd-lines { position: absolute; inset: 16px; border: 2px solid rgba(255,255,255,0.8); pointer-events: none; z-index: 0; }
+        .sd-center-line { position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.8); transform: translateY(-50%); pointer-events: none; z-index: 0; }
+        .sd-center-circle { position: absolute; top: 50%; left: 50%; width: 140px; height: 140px; border: 2px solid rgba(255,255,255,0.8); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 0; }
+        .sd-box-top { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); width: 300px; height: 100px; border: 2px solid rgba(255,255,255,0.8); border-top: none; pointer-events: none; z-index: 0; }
+        .sd-box-bottom { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); width: 300px; height: 100px; border: 2px solid rgba(255,255,255,0.8); border-bottom: none; pointer-events: none; z-index: 0; }
+
+        .sd-row { display: flex; justify-content: space-around; align-items: flex-end; width: 100%; z-index: 10; position: relative; }
+        
+        /* Slot de Posición */
+        .sd-slot { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 120px; min-height: 100px; position: relative; transition: all 0.2s; padding-bottom: 30px; }
+        .sd-slot.drag-over { background: rgba(255, 255, 255, 0.2); border-radius: 8px; }
+        
+        /* El punto blanco que marca la posición en el campo */
+        .sd-dot { width: 20px; height: 20px; background: white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); }
+        .sd-pos-label { position: absolute; bottom: -20px; font-size: 0.7rem; font-weight: 900; color: rgba(255,255,255,0.9); text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+
+        /* Contenedor de las tarjetas apilables */
+        .sd-cards-container { display: flex; flex-direction: column; gap: 4px; width: 100%; align-items: center; min-height: 40px; }
+        
+        /* Tarjeta de Jugador en el Campo */
+        .sd-card { width: 130px; border-radius: 6px; padding: 4px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: grab; position: relative; transition: transform 0.1s; }
+        .sd-card:active { cursor: grabbing; transform: scale(1.05); }
+        .sd-card.dragging { opacity: 0.5; }
+        .sd-card .c-name { font-weight: 900; font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 1px 1px 1px rgba(0,0,0,0.4); }
+        .sd-card .c-info { font-size: 0.6rem; opacity: 0.9; text-shadow: 1px 1px 1px rgba(0,0,0,0.4); line-height: 1.1; }
+
+        /* Elementos Ocultos en Tarjeta (Botón borrar y Selector color) */
+        .sd-card-controls { display: none; position: absolute; top: -10px; right: -10px; flex-direction: column; gap: 2px; }
+        .sd-card:hover .sd-card-controls { display: flex; }
+        .sd-btn-del { background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; border: 1px solid white; cursor: pointer; }
+
+        /* Tarjeta Arrastrable del Buscador */
+        .ficha-drag { background: #1e293b; color: white; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; cursor: grab; margin-bottom: 8px; border-left: 4px solid #3b82f6; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .ficha-drag:active { cursor: grabbing; }
+
+        .pdf-export-mode { width: 1200px !important; background: white !important; padding: 20px !important; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
 
-    <!-- LOGIN -->
+    <!-- ================= LOGIN ================= -->
     <div id="login-screen" class="min-h-screen flex items-center justify-center px-4">
         <div class="max-w-md w-full bg-white rounded-xl shadow-lg p-8 text-center border border-slate-200">
             <div class="w-full h-2 bg-blue-900 absolute top-0 left-0 rounded-t-xl"></div>
@@ -35,15 +77,16 @@
 
     <!-- ================= PANTALLA OJEADOR ================= -->
     <div id="dashboard-screen" class="hidden min-h-screen flex flex-col">
-        <header class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-10">
+        <header class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-40">
             <div class="flex items-center gap-3"><img src="https://santapolacf.es/images/ESCUDO3.png" class="h-10"><h1 class="text-lg font-bold">RCL SCOUT GROUP</h1></div>
             <p id="nombreUsuario" class="font-bold bg-blue-800 px-4 py-1 rounded-full text-sm"></p>
         </header>
 
-        <nav class="bg-white shadow-sm border-b border-slate-200 flex justify-center gap-8 font-bold text-slate-500">
+        <nav class="bg-white shadow-sm border-b border-slate-200 flex justify-center gap-8 font-bold text-slate-500 sticky top-[72px] z-30">
             <button onclick="cambiarTab('scout', 'tab-registro')" class="tab-btn scout-tab active py-4 px-2 hover:text-emerald-600 transition">📝 Nuevo Registro</button>
             <button onclick="cambiarTab('scout', 'tab-mis-informes')" class="tab-btn scout-tab py-4 px-2 hover:text-emerald-600 transition">📂 Mis Informes</button>
             <button onclick="cambiarTab('scout', 'tab-mis-dossiers')" class="tab-btn scout-tab py-4 px-2 hover:text-emerald-600 transition">📁 Dossiers de Partido</button>
+            <button onclick="cambiarTab('scout', 'tab-campo-scout'); inicializarCampograma('scout');" class="tab-btn scout-tab py-4 px-2 hover:text-emerald-600 transition">⚽ Shadow Team</button>
         </nav>
         
         <main class="p-4 md:p-6 max-w-[1400px] mx-auto w-full">
@@ -65,19 +108,25 @@
                         </div>
                     </div>
 
-                    <div class="lg:col-span-8 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-                        <div class="bg-blue-900 text-white p-4 flex justify-between items-center"><h2 class="font-bold text-lg">REGISTRO DE NUEVO JUGADOR</h2></div>
+                    <div class="lg:col-span-8 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col">
+                        <div class="bg-blue-900 text-white p-4 flex justify-between items-center rounded-t-xl"><h2 class="font-bold text-lg">REGISTRO DE NUEVO JUGADOR</h2></div>
                         <div class="p-6 md:p-8">
                             <form id="formScouting" class="space-y-6">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-slate-100">
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">REC <span class="text-blue-500">(?)</span><span class="tooltiptext">FICHAR: Firmar ya.<br>RPC: Tener en cuenta.<br>NMA: Necesita análisis.<br>NCE: No da nivel.<br>SP: Supera posibilidades.</span></label><select id="rec" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="FICHAR">FICHAR</option><option value="RPC">RPC</option><option value="NMA">NMA</option><option value="NCE">NCE</option><option value="SP">SP</option></select></div>
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">NIVEL <span class="text-blue-500">(?)</span><span class="tooltiptext">NI: Inferior.<br>1: Suplente.<br>2: Rotación.<br>3: Titular.<br>4: Estrella.<br>NS: Supera Nivel.<br>AP: Alto Potencial.</span></label><select id="nivel" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="NI">NI</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="NS">NS</option><option value="AP">AP</option></select></div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-1">REC <div class="tooltip-container text-blue-500">(?) <span class="tooltiptext">FICHAR: Firmar ya.<br>RPC: Tener en cuenta.<br>NMA: Necesita análisis.<br>NCE: No da nivel.<br>SP: Supera posibilidades.</span></div></label>
+                                        <select id="rec" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="FICHAR">FICHAR</option><option value="RPC">RPC</option><option value="NMA">NMA</option><option value="NCE">NCE</option><option value="SP">SP</option></select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-1">NIVEL <div class="tooltip-container text-blue-500">(?) <span class="tooltiptext">NI: Inferior.<br>1: Suplente.<br>2: Rotación.<br>3: Titular.<br>4: Estrella.<br>NS: Supera Nivel.<br>AP: Alto Potencial.</span></div></label>
+                                        <select id="nivel" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="NI">NI</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="NS">NS</option><option value="AP">AP</option></select>
+                                    </div>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">NOMBRE</label><input type="text" id="nombre" class="w-full px-3 py-2 border rounded autocapitalize outline-none focus:border-blue-600" required></div>
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">APELLIDO/S</label><input type="text" id="apellidos" class="w-full px-3 py-2 border rounded autocapitalize outline-none focus:border-blue-600" required></div>
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">AÑO</label><input type="text" id="ano" placeholder="ej: '04" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-1">NOMBRE <div class="tooltip-container text-blue-500">(?) <span class="tooltiptext">Primera mayúscula, resto minúscula.</span></div></label><input type="text" id="nombre" class="w-full px-3 py-2 border rounded autocapitalize outline-none focus:border-blue-600" required></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-1">APELLIDO/S <div class="tooltip-container text-blue-500">(?) <span class="tooltiptext">Primera mayúscula, resto minúscula.</span></div></label><input type="text" id="apellidos" class="w-full px-3 py-2 border rounded autocapitalize outline-none focus:border-blue-600" required></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-1">AÑO <div class="tooltip-container text-blue-500">(?) <span class="tooltiptext">Formato: '04</span></div></label><input type="text" id="ano" placeholder="ej: '04" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
                                 </div>
                                 
                                 <div id="cajaAutocomplete" class="hidden p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800 flex justify-between items-center mb-6">
@@ -86,25 +135,25 @@
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-6 border-b border-slate-100">
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">POSICIÓN</label><select id="pos" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="POR">POR</option><option value="DFC">DFC</option><option value="LD">LD</option><option value="LI">LI</option><option value="MC">MC</option><option value="MD">MD</option><option value="MI">MI</option><option value="MP">MP</option><option value="ED">ED</option><option value="EI">EI</option><option value="DC">DC</option><option value="DM">DM</option></select></div>
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">2POS</label><input type="text" id="pos2" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">PIE</label><select id="pie" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"><option value="">Seleccionar...</option><option value="D">D</option><option value="I">I</option><option value="A">A</option></select></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-1">POSICIÓN <div class="tooltip-container text-blue-500">(?) <span class="tooltiptext">Solo posiciones amarillas.</span></div></label><select id="pos" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="POR">POR</option><option value="DFC">DFC</option><option value="LD">LD</option><option value="LI">LI</option><option value="MC">MC</option><option value="MD">MD</option><option value="MI">MI</option><option value="MP">MP</option><option value="ED">ED</option><option value="EI">EI</option><option value="DC">DC</option><option value="DM">DM</option></select></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-1">2POS <div class="tooltip-container text-blue-500">(?) <span class="tooltiptext">Posiciones amarillas o naranjas. Ej: CAI - DFCI</span></div></label><input type="text" id="pos2" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-1">PIE <div class="tooltip-container text-blue-500">(?) <span class="tooltiptext">D (Diestro), I (Zurdo), A (Ambidiestro)</span></div></label><select id="pie" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"><option value="">Seleccionar...</option><option value="D">D</option><option value="I">I</option><option value="A">A</option></select></div>
                                     <div><label class="block text-sm font-bold text-slate-700 mb-1">ALTURA (cm)</label><input type="number" id="altura" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
                                     <div><label class="block text-sm font-bold text-slate-700 mb-1">PESO (kg)</label><input type="number" id="peso" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
                                     <div><label class="block text-sm font-bold text-slate-700 mb-1">NACIONALIDAD</label><input type="text" id="nacionalidad" value="ESP" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
                                 </div>
 
                                 <div class="space-y-4 pb-6 border-b border-slate-100">
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">ATRIBUTOS CLAVE <span class="text-blue-500">(?)</span></label><input type="text" id="atributos" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">DESCRIPCIÓN <span class="text-blue-500">(?)</span></label><textarea id="descripcion" rows="3" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></textarea></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-1">ATRIBUTOS CLAVE <div class="tooltip-container text-blue-500">(?) <span class="tooltiptext">Cualidades principales, cortas.</span></div></label><input type="text" id="atributos" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-1">DESCRIPCIÓN <div class="tooltip-container text-blue-500">(?) <span class="tooltiptext">Estilo de juego, físico y opinión.</span></div></label><textarea id="descripcion" rows="3" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></textarea></div>
                                 </div>
 
                                 <div class="grid grid-cols-1 md:grid-cols-4 gap-6 pb-6 border-b border-slate-100">
-                                    <div class="md:col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">LIGA <span class="text-blue-500">(?)</span></label><input type="text" id="liga" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
+                                    <div class="md:col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-1">LIGA <div class="tooltip-container text-blue-500">(?) <span class="tooltiptext">Ej: 1ªFFCV - G4</span></div></label><input type="text" id="liga" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
                                     <div class="md:col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">EQUIPO</label><input type="text" id="equipo" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">NIVEL EQ. <span class="text-blue-500">(?)</span></label><input type="number" id="nivelEquipo" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">FECHA <span class="text-blue-500">(?)</span></label><input type="text" id="fecha" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
-                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">VALORACIÓN <span class="text-blue-500">(?)</span></label><input type="number" id="val" step="0.5" class="w-full px-3 py-2 border rounded font-bold text-lg outline-none focus:border-blue-600 text-emerald-600" required></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-1">NIVEL EQ. <div class="tooltip-container text-blue-500">(?) <span class="tooltiptext">0-10. El 5 es igual al nuestro.</span></div></label><input type="number" id="nivelEquipo" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-1">FECHA <div class="tooltip-container text-blue-500">(?) <span class="tooltiptext">Veces visto + fecha. Ej: 1-12SEP</span></div></label><input type="text" id="fecha" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 flex items-center gap-1">VALORACIÓN <div class="tooltip-container text-blue-500">(?) <span class="tooltiptext">Del 0 al 10 en incrementos de 0.5.</span></div></label><input type="number" id="val" step="0.5" class="w-full px-3 py-2 border rounded font-bold text-lg outline-none focus:border-blue-600 text-emerald-600" required></div>
                                     <div><label class="block text-sm font-bold text-slate-700 mb-1">LINK FFCV</label><input type="url" id="link" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
                                 </div>
 
@@ -139,30 +188,79 @@
                 </div>
             </div>
 
-            <!-- TAB OJEADOR: DOSSIERS DE PARTIDO -->
+            <!-- TAB OJEADOR: DOSSIERS -->
             <div id="tab-mis-dossiers" class="tab-content scout-content">
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                    <h2 class="text-xl font-black mb-6 border-b pb-2">Mis Dossiers de Partido (Agrupados)</h2>
-                    <div id="contenedorDossiersScout" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Se rellenará por JS -->
-                    </div>
+                    <h2 class="text-xl font-black mb-6 border-b pb-2">Mis Dossiers de Partido</h2>
+                    <div id="contenedorDossiersScout" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
                 </div>
             </div>
 
+            <!-- TAB OJEADOR: SHADOW TEAM -->
+            <div id="tab-campo-scout" class="tab-content scout-content">
+                <div class="flex flex-col md:flex-row gap-6 items-start h-auto md:h-[850px]">
+                    <div class="w-full md:w-1/4 bg-white rounded-xl shadow-sm border border-slate-200 p-4 h-full flex flex-col">
+                        <h3 class="font-black text-sm uppercase text-slate-500 mb-2 border-b pb-2">Mis Jugadores</h3>
+                        <input type="text" id="buscadorDragScout" placeholder="Buscar..." class="w-full px-3 py-2 border rounded text-sm mb-3 outline-none">
+                        <div id="listaDragScout" class="flex-1 overflow-y-auto pr-1"></div>
+                    </div>
+                    
+                    <div class="w-full md:w-3/4 bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full flex flex-col relative" id="contenedorPdfScout">
+                        <div class="flex justify-between items-center mb-4 z-10 bg-white border-b pb-4">
+                            <div class="flex gap-4 items-center">
+                                <h2 class="text-xl font-black text-slate-800">Mi Shadow Team</h2>
+                                <select onchange="dibujarFormacion(this.value, 'scout')" class="bg-slate-100 border border-slate-300 rounded px-3 py-1 text-sm font-bold outline-none text-slate-700">
+                                    <option value="4-4-2">4-4-2</option><option value="4-2-3-1" selected>4-2-3-1</option><option value="4-3-3">4-3-3</option><option value="3-5-2">3-5-2</option><option value="3-4-3">3-4-3</option><option value="5-3-2">5-3-2</option><option value="4-1-4-1">4-1-4-1</option>
+                                </select>
+                            </div>
+                            <button onclick="exportarShadowTeam('contenedorPdfScout', 'Mi_Shadow_Team')" data-html2canvas-ignore class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded font-bold text-sm shadow transition">📄 Exportar Dossier PDF</button>
+                        </div>
+                        
+                        <div id="zonaExportarCampogramaScout" class="flex flex-col gap-6 flex-1 overflow-y-auto pb-10">
+                            <!-- Leyenda -->
+                            <div class="bg-slate-50 p-3 rounded border border-slate-200 flex flex-wrap gap-4 items-center text-sm">
+                                <span class="font-bold text-slate-700">Leyenda de Color:</span>
+                                <div id="legend-list-scout" class="flex flex-wrap gap-2 items-center"></div>
+                                <div data-html2canvas-ignore class="flex gap-1 ml-auto border-l pl-4 border-slate-300">
+                                    <input type="color" id="newColor-scout" value="#ef4444" class="w-6 h-6 rounded cursor-pointer border-0 p-0">
+                                    <input type="text" id="newName-scout" placeholder="Ej: Top Minutos" class="px-2 py-1 text-xs border rounded w-32 outline-none">
+                                    <button onclick="addLegend('scout')" class="bg-slate-800 text-white px-2 py-1 rounded text-xs font-bold">+</button>
+                                </div>
+                            </div>
+
+                            <!-- PITCH SCOUT -->
+                            <div class="sd-pitch" id="pitch-scout">
+                                <div class="sd-lines"></div><div class="sd-center-line"></div><div class="sd-center-circle"></div><div class="sd-box-top"></div><div class="sd-box-bottom"></div>
+                                <div id="scout-pitch-row-4" class="sd-row"></div>
+                                <div id="scout-pitch-row-3" class="sd-row"></div>
+                                <div id="scout-pitch-row-2" class="sd-row"></div>
+                                <div id="scout-pitch-row-1" class="sd-row"></div>
+                                <div id="scout-pitch-row-0" class="sd-row"></div>
+                            </div>
+                            <!-- LISTADO AUTOMATICO -->
+                            <div id="listadoPlantillaScout" class="bg-white p-6 border border-slate-200 rounded shadow-sm">
+                                <h3 class="font-black text-lg border-b pb-2 mb-4 text-slate-800">Listado de Equipo Sombra</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm" id="cuerpoListadoScout">Esperando jugadores...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
     <!-- ================= PANTALLA ADMINISTRADOR ================= -->
     <div id="admin-screen" class="hidden min-h-screen flex flex-col bg-slate-100">
-        <header class="bg-slate-900 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-10">
+        <header class="bg-slate-900 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-40">
             <h1 class="text-lg font-bold">🛡️ DIRECCIÓN DEPORTIVA</h1>
             <button onclick="cargarPanelAdmin(); cargarMatrizGlobal();" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded text-sm font-bold shadow transition">🔄 Actualizar Todo</button>
         </header>
 
-        <nav class="bg-white shadow-sm border-b border-slate-200 flex justify-center gap-8 font-bold text-slate-500">
+        <nav class="bg-white shadow-sm border-b border-slate-200 flex justify-center gap-8 font-bold text-slate-500 sticky top-[64px] z-30">
             <button onclick="cambiarTab('admin', 'tab-coord')" class="tab-btn admin-tab active py-4 px-2 hover:text-emerald-600 transition">🛡️ Coordinación</button>
             <button onclick="cambiarTab('admin', 'tab-bd')" class="tab-btn admin-tab py-4 px-2 hover:text-emerald-600 transition">📊 Base de Datos</button>
-            <button onclick="cambiarTab('admin', 'tab-dossiers-global')" class="tab-btn admin-tab py-4 px-2 hover:text-emerald-600 transition">📁 Dossiers Globales</button>
+            <button onclick="cambiarTab('admin', 'tab-dossiers-global')" class="tab-btn admin-tab py-4 px-2 hover:text-emerald-600 transition">📁 Dossiers</button>
+            <button onclick="cambiarTab('admin', 'tab-campo-global'); inicializarCampograma('admin');" class="tab-btn admin-tab py-4 px-2 hover:text-emerald-600 transition">⚽ Shadow Team</button>
         </nav>
 
         <main class="p-6 max-w-7xl mx-auto w-full space-y-8">
@@ -184,58 +282,97 @@
                 </div>
             </div>
 
-            <!-- ADMIN: BASE DE DATOS GLOBAL -->
+            <!-- ADMIN: BD -->
             <div id="tab-bd" class="tab-content admin-content">
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="bg-blue-900 text-white px-6 py-3 border-b flex justify-between items-center">
-                        <h2 class="font-bold text-sm">BASE DE DATOS MATRIZ</h2>
-                    </div>
-                    
+                    <div class="bg-blue-900 text-white px-6 py-3 border-b flex justify-between items-center"><h2 class="font-bold text-sm">BASE DE DATOS MATRIZ</h2></div>
                     <div class="p-4 border-b border-slate-200 bg-slate-50 grid grid-cols-1 md:grid-cols-6 gap-3">
-                        <div class="md:col-span-2"><label class="text-xs font-bold text-slate-500 uppercase">Buscar (Texto)</label><input type="text" id="filtroTexto" placeholder="Nombre, equipo..." class="w-full px-3 py-1.5 border rounded outline-none focus:border-blue-500 text-sm"></div>
+                        <div class="md:col-span-2"><label class="text-xs font-bold text-slate-500 uppercase">Buscar</label><input type="text" id="filtroTexto" placeholder="Nombre, equipo..." class="w-full px-3 py-1.5 border rounded outline-none focus:border-blue-500 text-sm"></div>
                         <div><label class="text-xs font-bold text-slate-500 uppercase">Posición</label><select id="filtroPos" class="w-full px-3 py-1.5 border rounded outline-none text-sm"><option value="">Todas</option><option value="POR">POR</option><option value="DFC">DFC</option><option value="LI">LI</option><option value="LD">LD</option><option value="MC">MC</option><option value="MD">MD</option><option value="MI">MI</option><option value="MP">MP</option><option value="ED">ED</option><option value="EI">EI</option><option value="DC">DC</option><option value="DM">DM</option></select></div>
                         <div><label class="text-xs font-bold text-slate-500 uppercase">Recomendación</label><select id="filtroRec" class="w-full px-3 py-1.5 border rounded outline-none text-sm"><option value="">Todas</option><option value="FICHAR">FICHAR</option><option value="RPC">RPC</option><option value="NMA">NMA</option><option value="NCE">NCE</option><option value="SP">SP</option></select></div>
                         <div><label class="text-xs font-bold text-slate-500 uppercase">Año</label><input type="text" id="filtroAno" placeholder="Ej: '04" class="w-full px-3 py-1.5 border rounded outline-none text-sm"></div>
                         <div><label class="text-xs font-bold text-slate-500 uppercase">Pie</label><select id="filtroPie" class="w-full px-3 py-1.5 border rounded outline-none text-sm"><option value="">Todos</option><option value="D">Diestro</option><option value="I">Zurdo</option><option value="A">Ambidiestro</option></select></div>
                         <div class="md:col-span-2 flex items-end"><button onclick="filtrarMatrizGlobal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-1.5 rounded shadow transition text-sm">Aplicar Filtros</button></div>
                     </div>
-
                     <div class="overflow-x-auto min-h-[400px]">
                         <table class="w-full text-left text-sm whitespace-nowrap">
                             <thead class="bg-white border-b border-slate-200 text-slate-600 uppercase text-xs font-bold">
                                 <tr><th class="px-4 py-3">Rec</th><th class="px-4 py-3">Nombre</th><th class="px-4 py-3">Año</th><th class="px-4 py-3">Pos</th><th class="px-4 py-3">Equipo</th><th class="px-4 py-3 text-center">Pie</th><th class="px-4 py-3 text-center">Nota Media</th><th class="px-4 py-3 text-center">Perfil</th></tr>
                             </thead>
-                            <tbody id="cuerpoMatrizGlobal" class="divide-y divide-slate-100">
-                                <tr><td colspan="8" class="px-6 py-10 text-center text-slate-500">Esperando conexión con la Base de Datos...</td></tr>
-                            </tbody>
+                            <tbody id="cuerpoMatrizGlobal" class="divide-y divide-slate-100"></tbody>
                         </table>
                     </div>
-                    
                     <div class="bg-slate-50 border-t border-slate-200 p-4 flex justify-between items-center text-sm font-bold text-slate-600">
-                        <button id="btnPrevPage" onclick="cambiarPagina(-1)" class="bg-white border border-slate-300 px-4 py-2 rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition">Anterior</button>
-                        <span id="txtInfoPaginacion">Página 1 de 1</span>
-                        <button id="btnNextPage" onclick="cambiarPagina(1)" class="bg-white border border-slate-300 px-4 py-2 rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition">Siguiente</button>
+                        <button id="btnPrevPage" onclick="cambiarPagina(-1)" class="bg-white border border-slate-300 px-4 py-2 rounded hover:bg-slate-100 transition">Anterior</button>
+                        <span id="txtInfoPaginacion">Página 1</span>
+                        <button id="btnNextPage" onclick="cambiarPagina(1)" class="bg-white border border-slate-300 px-4 py-2 rounded hover:bg-slate-100 transition">Siguiente</button>
                     </div>
                 </div>
             </div>
 
-            <!-- ADMIN: DOSSIERS DE PARTIDO -->
+            <!-- ADMIN: DOSSIERS -->
             <div id="tab-dossiers-global" class="tab-content admin-content">
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-                    <h2 class="text-xl font-black mb-6 border-b pb-2">Dossiers de Partido (Todos los Ojeadores)</h2>
+                    <h2 class="text-xl font-black mb-6 border-b pb-2">Dossiers de Partido Globales</h2>
                     <input type="text" id="buscadorDossierAdmin" placeholder="Buscar por equipo u ojeador..." class="w-full px-4 py-2 border rounded outline-none focus:border-blue-500 mb-6 text-sm">
-                    <div id="contenedorDossiersAdmin" class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                        <!-- Se rellenará por JS -->
-                    </div>
+                    <div id="contenedorDossiersAdmin" class="grid grid-cols-1 md:grid-cols-4 gap-6"></div>
                 </div>
             </div>
 
+            <!-- ADMIN: SHADOW TEAM -->
+            <div id="tab-campo-global" class="tab-content admin-content">
+                <div class="flex flex-col md:flex-row gap-6 items-start h-auto md:h-[850px]">
+                    <div class="w-full md:w-1/4 bg-white rounded-xl shadow-sm border border-slate-200 p-4 h-full flex flex-col">
+                        <h3 class="font-black text-sm uppercase text-slate-500 mb-2 border-b pb-2">Matriz Global</h3>
+                        <input type="text" id="buscadorDragAdmin" placeholder="Buscar jugador..." class="w-full px-3 py-2 border rounded text-sm mb-3 outline-none">
+                        <div id="listaDragAdmin" class="flex-1 overflow-y-auto pr-1"></div>
+                    </div>
+                    
+                    <div class="w-full md:w-3/4 bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full flex flex-col relative" id="contenedorPdfAdmin">
+                        <div class="flex justify-between items-center mb-4 z-10 bg-white border-b pb-4">
+                            <div class="flex gap-4 items-center">
+                                <h2 class="text-xl font-black text-slate-800">Shadow Team Global</h2>
+                                <select onchange="dibujarFormacion(this.value, 'admin')" class="bg-slate-100 border border-slate-300 rounded px-3 py-1 text-sm font-bold outline-none text-slate-700">
+                                    <option value="4-4-2">4-4-2</option><option value="4-2-3-1" selected>4-2-3-1</option><option value="4-3-3">4-3-3</option><option value="3-5-2">3-5-2</option><option value="3-4-3">3-4-3</option><option value="5-3-2">5-3-2</option><option value="4-1-4-1">4-1-4-1</option>
+                                </select>
+                            </div>
+                            <button onclick="exportarShadowTeam('contenedorPdfAdmin', 'Shadow_Team_Global')" data-html2canvas-ignore class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded font-bold text-sm shadow transition">📄 Exportar Dossier PDF</button>
+                        </div>
+                        
+                        <div id="zonaExportarCampogramaAdmin" class="flex flex-col gap-6 flex-1 overflow-y-auto pb-10">
+                            <!-- Leyenda -->
+                            <div class="bg-slate-50 p-3 rounded border border-slate-200 flex flex-wrap gap-4 items-center text-sm">
+                                <span class="font-bold text-slate-700">Leyenda:</span>
+                                <div id="legend-list-admin" class="flex flex-wrap gap-2 items-center"></div>
+                                <div data-html2canvas-ignore class="flex gap-1 ml-auto border-l pl-4 border-slate-300">
+                                    <input type="color" id="newColor-admin" value="#10b981" class="w-6 h-6 rounded cursor-pointer border-0 p-0">
+                                    <input type="text" id="newName-admin" placeholder="Ej: Top Minutos" class="px-2 py-1 text-xs border rounded w-32 outline-none">
+                                    <button onclick="addLegend('admin')" class="bg-slate-800 text-white px-2 py-1 rounded text-xs font-bold">+</button>
+                                </div>
+                            </div>
+
+                            <!-- PITCH ADMIN -->
+                            <div class="sd-pitch" id="pitch-admin">
+                                <div class="sd-lines"></div><div class="sd-center-line"></div><div class="sd-center-circle"></div><div class="sd-box-top"></div><div class="sd-box-bottom"></div>
+                                <div id="admin-pitch-row-4" class="sd-row"></div>
+                                <div id="admin-pitch-row-3" class="sd-row"></div>
+                                <div id="admin-pitch-row-2" class="sd-row"></div>
+                                <div id="admin-pitch-row-1" class="sd-row"></div>
+                                <div id="admin-pitch-row-0" class="sd-row"></div>
+                            </div>
+                            <!-- LISTADO AUTOMATICO -->
+                            <div id="listadoPlantillaAdmin" class="bg-white p-6 border border-slate-200 rounded shadow-sm">
+                                <h3 class="font-black text-lg border-b pb-2 mb-4 text-slate-800">Listado de Equipo Sombra</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-sm" id="cuerpoListadoAdmin">Esperando jugadores...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
     <!-- ================= MODALES ================= -->
-    
-    <!-- Modal Asignar Partido (Intacto) -->
     <div id="modalAsignar" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
             <h2 class="text-xl font-bold mb-4 border-b pb-2">Asignar Nuevo Partido</h2>
@@ -253,7 +390,6 @@
         </div>
     </div>
 
-    <!-- Modal PERFIL JUGADOR (Con Cálculo de 4 VALs e Historial) -->
     <div id="modalPerfilJugador" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 flex items-center justify-center p-4 z-[60] overflow-y-auto">
         <div class="bg-white rounded-2xl max-w-4xl w-full shadow-2xl overflow-hidden mt-10 mb-10" id="perfilParaExportar">
             <div class="bg-slate-900 p-6 flex justify-between items-start text-white relative">
@@ -288,54 +424,34 @@
         </div>
     </div>
 
-    <!-- Modal VISOR DE DOSSIER DE PARTIDO -->
     <div id="modalVisorDossier" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[60] overflow-y-auto">
         <div class="bg-slate-100 rounded-xl max-w-5xl w-full shadow-2xl overflow-hidden mt-10 mb-10 flex flex-col max-h-[90vh]">
             <div class="bg-slate-900 p-5 flex justify-between items-center text-white relative">
-                <div>
-                    <h2 id="dossierTitulo" class="text-xl font-black uppercase tracking-tight text-emerald-400">Dossier de Partido</h2>
-                    <p id="dossierSubtitulo" class="text-slate-300 text-sm font-medium mt-1">Ojeador: -</p>
-                </div>
-                <div class="flex gap-4">
-                    <button onclick="cerrarVisorDossier()" class="text-slate-400 hover:text-white transition text-2xl font-bold">✖</button>
-                </div>
+                <div><h2 id="dossierTitulo" class="text-xl font-black uppercase tracking-tight text-emerald-400">Dossier de Partido</h2><p id="dossierSubtitulo" class="text-slate-300 text-sm font-medium mt-1">Ojeador: -</p></div>
+                <div class="flex gap-4"><button onclick="cerrarVisorDossier()" class="text-slate-400 hover:text-white transition text-2xl font-bold">✖</button></div>
             </div>
             <div class="p-6 overflow-y-auto flex-1 bg-slate-100">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="cuerpoVisorDossier">
-                    <!-- Tarjetas de jugadores se inyectan aquí -->
-                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="cuerpoVisorDossier"></div>
             </div>
         </div>
     </div>
 
-    <!-- JAVASCRIPT -->
+    <!-- ================= JAVASCRIPT ================= -->
     <script>
-        // =========================================================================
-        // ENLACES
-        // =========================================================================
+        // PEGA TUS ENLACES AQUI ABAJO
         const SCRIPT_URL_USERS = "https://script.google.com/macros/s/AKfycbxNQAdOPguxiqPQWSPuNHAUm3WO1_e5RnYO_PwtsZW03FycnfFbb389TOXzO0JV-7BN/exec";
         const SCRIPT_URL_DB = "https://script.google.com/macros/s/AKfycbwrr3ARTTDAFiSBIKkI1SdoQUQyZbT2K3Wd3yeWB2hAP1q462XlJYTmQxRJenQFM3rhng/exec"; 
-        // =========================================================================
 
-        let datosUsuario = {};
-        let datosMatrizGlobal = [];
-        let datosFiltradosGlobal = [];
-        let currentPage = 1; const itemsPerPage = 25;
-        let jugadorEncontradoParaAutocomplete = null;
+        let datosUsuario = {}; let datosMatrizGlobal = []; let datosFiltradosGlobal = []; let currentPage = 1; const itemsPerPage = 25; let jugadorEncontradoParaAutocomplete = null;
 
         async function enviarA_Google(datos, url = SCRIPT_URL_USERS) {
             const respuesta = await fetch(url, { method: "POST", body: JSON.stringify(datos), headers: { "Content-Type": "text/plain;charset=utf-8" }});
             return await respuesta.json();
         }
 
-        function cambiarTab(rol, tabId) {
-            document.querySelectorAll(`.${rol}-content`).forEach(el => el.classList.remove('active'));
-            document.querySelectorAll(`.${rol}-tab`).forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            event.currentTarget.classList.add('active');
-        }
+        function cambiarTab(rol, tabId) { document.querySelectorAll(`.${rol}-content`).forEach(el => el.classList.remove('active')); document.querySelectorAll(`.${rol}-tab`).forEach(el => el.classList.remove('active')); document.getElementById(tabId).classList.add('active'); event.currentTarget.classList.add('active'); }
 
-        // ================== LOGIN ==================
+        // --- LOGIN Y ARRANQUE (FASE 1 Y 2 INTACTAS) ---
         document.getElementById("loginForm").addEventListener("submit", async (e) => {
             e.preventDefault(); document.getElementById("btnLogin").innerText = "Conectando...";
             try {
@@ -344,366 +460,297 @@
                     datosUsuario = res; document.getElementById("login-screen").classList.add("hidden");
                     if(res.isAdmin) {
                         document.getElementById("admin-screen").classList.remove("hidden");
-                        cargarPanelAdmin(); cargarMatrizGlobal();
+                        cargarPanelAdmin(); cargarMatrizGlobal(); 
                     } else {
                         document.getElementById("dashboard-screen").classList.remove("hidden");
                         document.getElementById("nombreUsuario").innerText = `Scout: ${res.nombre}`;
                         document.getElementById("txtPartido").innerText = res.partido || "Sin partido asignado";
                         document.getElementById("txtEquipo").innerText = res.equipo || "-";
-                        
                         const btnVid = document.getElementById("btnVerPartido");
-                        if(res.link && res.link.trim() !== "" && res.link !== "undefined") {
-                            btnVid.href = res.link; btnVid.classList.remove("hidden");
-                        } else { btnVid.classList.add("hidden"); }
-                        cargarMatrizGlobal(); // Carga silenciada para el ojeador
+                        if(res.link && res.link.trim() !== "" && res.link !== "undefined") { btnVid.href = res.link; btnVid.classList.remove("hidden"); }
+                        cargarMatrizGlobal();
                     }
                 } else { mostrarError("Credenciales incorrectas."); }
             } catch (error) { mostrarError("Error de conexión."); }
         });
-        function mostrarError(msg) {
-            document.getElementById("loginError").innerText = msg; document.getElementById("loginError").classList.remove("hidden"); document.getElementById("btnLogin").innerText = "Acceder al Sistema";
-        }
+        function mostrarError(msg) { document.getElementById("loginError").innerText = msg; document.getElementById("loginError").classList.remove("hidden"); document.getElementById("btnLogin").innerText = "Acceder al Sistema"; }
 
-        // ================== OJEADOR: AUTOCOMPLETADO Y FORMULARIO ==================
+        // --- OJEADOR FORMULARIO (FASE 1 Y 2 INTACTAS) ---
         function comprobarJugadorExistente() {
-            const nom = document.getElementById('nombre').value.trim().toLowerCase();
-            const ape = document.getElementById('apellidos').value.trim().toLowerCase();
+            const nom = document.getElementById('nombre').value.trim().toLowerCase(); const ape = document.getElementById('apellidos').value.trim().toLowerCase();
             if(nom && ape && datosMatrizGlobal.length > 0) {
                 const fullName = nom + " " + ape;
                 const coincidencias = datosMatrizGlobal.filter(f => ((f[2] || "").trim().toLowerCase() + " " + (f[3] || "").trim().toLowerCase()) === fullName);
-                
-                if(coincidencias.length > 0) {
-                    jugadorEncontradoParaAutocomplete = coincidencias[coincidencias.length - 1]; // Más reciente
-                    document.getElementById('cajaAutocomplete').classList.remove('hidden');
-                } else {
-                    document.getElementById('cajaAutocomplete').classList.add('hidden');
-                    jugadorEncontradoParaAutocomplete = null;
-                }
+                if(coincidencias.length > 0) { jugadorEncontradoParaAutocomplete = coincidencias[coincidencias.length - 1]; document.getElementById('cajaAutocomplete').classList.remove('hidden'); } 
+                else { document.getElementById('cajaAutocomplete').classList.add('hidden'); jugadorEncontradoParaAutocomplete = null; }
             }
         }
-        document.getElementById('nombre').addEventListener('blur', comprobarJugadorExistente);
-        document.getElementById('apellidos').addEventListener('blur', comprobarJugadorExistente);
-
+        document.getElementById('nombre').addEventListener('blur', comprobarJugadorExistente); document.getElementById('apellidos').addEventListener('blur', comprobarJugadorExistente);
         function aplicarAutocomplete() {
             if(jugadorEncontradoParaAutocomplete) {
                 const j = jugadorEncontradoParaAutocomplete;
-                document.getElementById('ano').value = j[4] || ""; document.getElementById('pos').value = j[5] || ""; document.getElementById('pos2').value = j[6] || ""; document.getElementById('altura').value = j[7] || ""; document.getElementById('peso').value = j[8] || ""; document.getElementById('pie').value = j[9] || ""; document.getElementById('nacionalidad').value = j[10] || "ESP"; document.getElementById('liga').value = j[13] || ""; document.getElementById('equipo').value = j[14] || "";
-                document.getElementById('cajaAutocomplete').innerHTML = "<strong>✅ Datos base rellenados.</strong> Continúa con tu valoración.";
+                document.getElementById('ano').value = j[4] || ""; document.getElementById('pos').value = j[5] || ""; document.getElementById('pos2').value = j[6] || ""; document.getElementById('altura').value = j[7] || ""; document.getElementById('peso').value = j[8] || ""; document.getElementById('pie').value = j[9] || ""; document.getElementById('nacionalidad').value = j[10] || "ESP"; document.getElementById('liga').value = j[13] || ""; document.getElementById('equipo').value = j[14] || ""; document.getElementById('cajaAutocomplete').innerHTML = "<strong>✅ Datos base rellenados.</strong> Continúa con tu valoración.";
             }
         }
-
         document.querySelectorAll('.autocapitalize').forEach(input => { input.addEventListener('input', e => e.target.value = e.target.value.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase())); });
         document.getElementById('ano')?.addEventListener('blur', e => { let val = e.target.value.trim(); if (val.length === 2 && !val.includes("'")) e.target.value = "'" + val; });
 
         function leerBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = error => reject(error); }); }
-
         document.getElementById("formScouting")?.addEventListener("submit", async (e) => {
             e.preventDefault(); const btn = document.getElementById("btnEnviarRegistro"); btn.innerText = "GUARDANDO..."; btn.disabled = true;
-            
-            const datosJugador = {
-                accion: "guardar_jugador", ojeador: datosUsuario.nombre || "Scout",
-                rec: document.getElementById('rec').value, nivel: document.getElementById('nivel').value,
-                nombre: document.getElementById('nombre').value, apellidos: document.getElementById('apellidos').value,
-                ano: document.getElementById('ano').value, pos: document.getElementById('pos').value,
-                pos2: document.getElementById('pos2').value, pie: document.getElementById('pie').value,
-                altura: document.getElementById('altura').value, peso: document.getElementById('peso').value,
-                nacionalidad: document.getElementById('nacionalidad').value, atributos: document.getElementById('atributos').value,
-                descripcion: document.getElementById('descripcion').value, liga: document.getElementById('liga').value,
-                equipo: document.getElementById('equipo').value, nivelEquipo: document.getElementById('nivelEquipo').value,
-                fecha: document.getElementById('fecha').value, val: document.getElementById('val').value, 
-                link: document.getElementById('link').value, linkVideo: document.getElementById('jugadorVideoUrl').value
-            };
-            const pdfJugador = document.getElementById("jugadorPdf").files[0];
-            if(pdfJugador) datosJugador.pdfBase64 = await leerBase64(pdfJugador);
-
-            try {
-                await enviarA_Google(datosJugador, SCRIPT_URL_DB);
-                document.getElementById('formScouting').reset();
-                document.getElementById('mensajeExitoRegistro').classList.remove('hidden'); document.getElementById('cajaAutocomplete').classList.add('hidden');
-                setTimeout(() => document.getElementById('mensajeExitoRegistro').classList.add('hidden'), 4000);
-            } catch (error) { alert("Error guardando."); } finally { btn.innerText = "REGISTRAR JUGADOR EN LA MATRIZ"; btn.disabled = false; }
+            const datosJugador = { accion: "guardar_jugador", ojeador: datosUsuario.nombre || "Scout", rec: document.getElementById('rec').value, nivel: document.getElementById('nivel').value, nombre: document.getElementById('nombre').value, apellidos: document.getElementById('apellidos').value, ano: document.getElementById('ano').value, pos: document.getElementById('pos').value, pos2: document.getElementById('pos2').value, pie: document.getElementById('pie').value, altura: document.getElementById('altura').value, peso: document.getElementById('peso').value, nacionalidad: document.getElementById('nacionalidad').value, atributos: document.getElementById('atributos').value, descripcion: document.getElementById('descripcion').value, liga: document.getElementById('liga').value, equipo: document.getElementById('equipo').value, nivelEquipo: document.getElementById('nivelEquipo').value, fecha: document.getElementById('fecha').value, val: document.getElementById('val').value, link: document.getElementById('link').value, linkVideo: document.getElementById('jugadorVideoUrl').value };
+            const pdfJugador = document.getElementById("jugadorPdf").files[0]; if(pdfJugador) datosJugador.pdfBase64 = await leerBase64(pdfJugador);
+            try { await enviarA_Google(datosJugador, SCRIPT_URL_DB); document.getElementById('formScouting').reset(); document.getElementById('mensajeExitoRegistro').classList.remove('hidden'); document.getElementById('cajaAutocomplete').classList.add('hidden'); setTimeout(() => document.getElementById('mensajeExitoRegistro').classList.add('hidden'), 4000); } catch (error) { alert("Error guardando el jugador."); } finally { btn.innerText = "REGISTRAR JUGADOR EN LA MATRIZ"; btn.disabled = false; }
         });
+        async function completarAsignacion() { const btn = document.getElementById("btnCompletarOjeador"); btn.innerText = "Completando..."; btn.disabled = true; try { await enviarA_Google({ accion: "subir_y_completar", fila: datosUsuario.fila, idCarpeta: datosUsuario.idCarpeta || "null" }, SCRIPT_URL_USERS); document.getElementById("cajaAsignacion").innerHTML = "<h3 class='text-emerald-600 font-black text-xl text-center py-6'>✅ Tarea Completada con Éxito</h3>"; } catch(e) { btn.innerText = "Error"; btn.disabled = false; } }
 
-        async function completarAsignacion() {
-            const btn = document.getElementById("btnCompletarOjeador"); btn.innerText = "Completando..."; btn.disabled = true;
-            try { await enviarA_Google({ accion: "subir_y_completar", fila: datosUsuario.fila, idCarpeta: datosUsuario.idCarpeta || "null" }, SCRIPT_URL_USERS); document.getElementById("cajaAsignacion").innerHTML = "<h3 class='text-emerald-600 font-black text-xl text-center py-6'>✅ Tarea Completada con Éxito</h3>"; } catch(e) { btn.innerText = "Error. Reintentar"; btn.disabled = false; }
-        }
-
-        // ================== ADMIN: COORDINACIÓN ==================
+        // --- BD, COORDINACION Y PERFILES (FASE 1 Y 2 INTACTAS) ---
         async function cargarPanelAdmin() {
-            const tabla = document.getElementById("tablaAdmin");
-            const res = await enviarA_Google({ accion: "cargar_admin" }, SCRIPT_URL_USERS);
-            if(res.exito && res.datos) {
-                tabla.innerHTML = "";
-                res.datos.forEach(oj => {
-                    let bLeido = oj.leido ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold mr-2">👁️ Leído</span>` : `<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs font-bold mr-2">No Leído</span>`;
-                    let bComp = oj.completado ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs font-bold">✅ Completado</span>` : `<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-bold">⏳ Pendiente</span>`;
-                    let lCarpeta = oj.idCarpeta ? `https://drive.google.com/drive/folders/${oj.idCarpeta}` : '#';
-                    let infoTiempos = `<p class="text-xs text-slate-400 mt-1.5">📅 Asignado: <span class="text-slate-600 font-medium">${oj.fechaAsignacion}</span></p>`;
-                    if (oj.completado) infoTiempos += `<p class="text-xs text-emerald-600">⏱️ Entregado: <span class="font-bold">${oj.fechaEntrega}</span></p>`;
-
-                    tabla.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="px-6 py-4 font-bold text-slate-700">${oj.nombre}</td><td class="px-6 py-4">${bLeido} ${bComp}</td><td class="px-6 py-4"><p class="text-sm font-bold text-slate-800">${oj.partido || 'Libre'}</p><p class="text-xs text-slate-500">${oj.equipo || '-'}</p>${infoTiempos}</td><td class="px-6 py-4 text-center space-x-1"><a href="${lCarpeta}" target="_blank" class="inline-block bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded text-xs font-bold transition">📁 Carpeta</a><button onclick="abrirModalAsignar(${oj.fila}, '${oj.nombre}', '${oj.partido}', '${oj.equipo}', '${oj.link}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold shadow transition ml-2">🎯 Asignar</button></td></tr>`;
-                });
-            }
+            const tabla = document.getElementById("tablaAdmin"); const res = await enviarA_Google({ accion: "cargar_admin" }, SCRIPT_URL_USERS);
+            if(res.exito && res.datos) { tabla.innerHTML = ""; res.datos.forEach(oj => { let bLeido = oj.leido ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold mr-2">👁️ Leído</span>` : `<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs font-bold mr-2">No Leído</span>`; let bComp = oj.completado ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs font-bold">✅ Completado</span>` : `<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-bold">⏳ Pendiente</span>`; let lCarpeta = oj.idCarpeta ? `https://drive.google.com/drive/folders/${oj.idCarpeta}` : '#'; let infoTiempos = `<p class="text-xs text-slate-400 mt-1.5">📅 Asignado: <span class="text-slate-600 font-medium">${oj.fechaAsignacion}</span></p>`; if (oj.completado) infoTiempos += `<p class="text-xs text-emerald-600">⏱️ Entregado: <span class="font-bold">${oj.fechaEntrega}</span></p>`; tabla.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="px-6 py-4 font-bold text-slate-700">${oj.nombre}</td><td class="px-6 py-4">${bLeido} ${bComp}</td><td class="px-6 py-4"><p class="text-sm font-bold text-slate-800">${oj.partido || 'Libre'}</p><p class="text-xs text-slate-500">${oj.equipo || '-'}</p>${infoTiempos}</td><td class="px-6 py-4 text-center space-x-1"><a href="${lCarpeta}" target="_blank" class="inline-block bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded text-xs font-bold transition">📁 Carpeta</a><button onclick="abrirModalAsignar(${oj.fila}, '${oj.nombre}', '${oj.partido}', '${oj.equipo}', '${oj.link}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold shadow transition ml-2">🎯 Asignar</button></td></tr>`; }); }
         }
+        function abrirModalAsignar(fila, nombre, partido, equipo, link) { document.getElementById("asignarFila").value = fila; document.getElementById("nombreAsignar").innerText = `Para: ${nombre}`; document.getElementById("asigPartido").value = partido && partido !== 'undefined' ? partido : ""; document.getElementById("asigEquipo").value = equipo && equipo !== 'undefined' ? equipo : ""; document.getElementById("asigLink").value = link && link !== 'undefined' ? link : ""; document.getElementById("modalAsignar").classList.remove("hidden"); } function cerrarModalAsignar() { document.getElementById("modalAsignar").classList.add("hidden"); } async function guardarAsignacion() { const btn = document.getElementById("btnGuardarAsignacion"); btn.innerText = "Enviando..."; btn.disabled = true; await enviarA_Google({ accion: "asignar_tarea", fila: document.getElementById("asignarFila").value, partido: document.getElementById("asigPartido").value, equipo: document.getElementById("asigEquipo").value, link: document.getElementById("asigLink").value }, SCRIPT_URL_USERS); cerrarModalAsignar(); btn.innerText = "Enviar"; btn.disabled = false; cargarPanelAdmin(); }
 
-        function abrirModalAsignar(fila, nombre, partido, equipo, link) { document.getElementById("asignarFila").value = fila; document.getElementById("nombreAsignar").innerText = `Para: ${nombre}`; document.getElementById("asigPartido").value = partido && partido !== 'undefined' ? partido : ""; document.getElementById("asigEquipo").value = equipo && equipo !== 'undefined' ? equipo : ""; document.getElementById("asigLink").value = link && link !== 'undefined' ? link : ""; document.getElementById("modalAsignar").classList.remove("hidden"); }
-        function cerrarModalAsignar() { document.getElementById("modalAsignar").classList.add("hidden"); }
-        async function guardarAsignacion() { const btn = document.getElementById("btnGuardarAsignacion"); btn.innerText = "Enviando..."; btn.disabled = true; await enviarA_Google({ accion: "asignar_tarea", fila: document.getElementById("asignarFila").value, partido: document.getElementById("asigPartido").value, equipo: document.getElementById("asigEquipo").value, link: document.getElementById("asigLink").value }, SCRIPT_URL_USERS); cerrarModalAsignar(); btn.innerText = "Enviar"; btn.disabled = false; cargarPanelAdmin(); }
-
-        // ================== MATRIZ: CARGA Y FILTROS ==================
         async function cargarMatrizGlobal() {
-            try {
-                const response = await enviarA_Google({ accion: "cargar_matriz" }, SCRIPT_URL_DB);
-                if(response.exito) { 
-                    datosMatrizGlobal = response.datos.slice(1); 
-                    filtrarMatrizGlobal(); // Para Admin
-                    if(!datosUsuario.isAdmin) renderizarMisInformes(); // Para Scout
-                    generarDossiersDePartido(); // Genera las carpetas
-                }
-            } catch(e) {}
+            try { const response = await enviarA_Google({ accion: "cargar_matriz" }, SCRIPT_URL_DB); if(response.exito) { datosMatrizGlobal = response.datos.slice(1); filtrarMatrizGlobal(); if(!datosUsuario.isAdmin) renderizarMisInformes(); generarDossiersDePartido(); } } catch(e) {}
         }
 
         function filtrarMatrizGlobal() {
-            if(!document.getElementById('filtroTexto')) return; // Si no es admin sale
+            if(!document.getElementById('filtroTexto')) return;
             const txt = (document.getElementById('filtroTexto').value || "").toLowerCase(); const pos = document.getElementById('filtroPos').value; const rec = document.getElementById('filtroRec').value; const ano = (document.getElementById('filtroAno').value || "").toLowerCase(); const pie = document.getElementById('filtroPie').value;
-
-            const arrFiltrado = datosMatrizGlobal.filter(fila => {
-                if(!fila[2]) return false;
-                const fTxt = fila.join(" ").toLowerCase().includes(txt); const fPos = pos === "" || fila[5] === pos; const fRec = rec === "" || fila[0] === rec; const fAno = ano === "" || (fila[4]||"").toLowerCase().includes(ano); const fPie = pie === "" || fila[9] === pie;
-                return fTxt && fPos && fRec && fAno && fPie;
-            });
-
-            // Agrupación y cálculo de medias reales (VAL1, VAL2, VAL3, VAL4)
-            let jugadoresDic = {};
+            const arrFiltrado = datosMatrizGlobal.filter(fila => { if(!fila[2]) return false; const fTxt = fila.join(" ").toLowerCase().includes(txt); const fPos = pos === "" || fila[5] === pos; const fRec = rec === "" || fila[0] === rec; const fAno = ano === "" || (fila[4]||"").toLowerCase().includes(ano); const fPie = pie === "" || fila[9] === pie; return fTxt && fPos && fRec && fAno && fPie; });
+            let jugDic = {};
             arrFiltrado.forEach(fila => {
                 let nomReal = (fila[2] + " " + (fila[3] || "")).trim(); let key = nomReal.toLowerCase();
-                if(!jugadoresDic[key]) jugadoresDic[key] = { filaData: fila, sumNotas: 0, countNotas: 0, nomReal: nomReal };
-                else jugadoresDic[key].filaData = fila; 
-                
-                [17, 18, 19, 20].forEach(idx => {
-                    let nStr = (fila[idx]||"").toString().replace(',', '.'); let n = parseFloat(nStr);
-                    if(!isNaN(n)) { jugadoresDic[key].sumNotas += n; jugadoresDic[key].countNotas++; }
-                });
+                if(!jugDic[key]) jugDic[key] = { filaData: fila, sum: 0, count: 0, nomReal: nomReal }; else jugDic[key].filaData = fila; 
+                [17, 18, 19, 20].forEach(idx => { let n = parseFloat((fila[idx]||"").toString().replace(',','.')); if(!isNaN(n)) { jugDic[key].sum += n; jugDic[key].count++; } });
             });
-
-            datosFiltradosGlobal = Object.values(jugadoresDic).sort((a,b) => {
-                const mediaA = a.countNotas > 0 ? (a.sumNotas/a.countNotas) : 0; const mediaB = b.countNotas > 0 ? (b.sumNotas/b.countNotas) : 0;
-                return mediaB - mediaA;
-            });
-
+            datosFiltradosGlobal = Object.values(jugDic).sort((a,b) => { const mA = a.count>0?(a.sum/a.count):0; const mB = b.count>0?(b.sum/b.count):0; return mB - mA; });
             currentPage = 1; renderizarTablaPaginada();
         }
-
         function renderizarTablaPaginada() {
-            const cuerpo = document.getElementById('cuerpoMatrizGlobal'); cuerpo.innerHTML = '';
-            const inicio = (currentPage - 1) * itemsPerPage; const fin = inicio + itemsPerPage; const items = datosFiltradosGlobal.slice(inicio, fin);
-
+            const cuerpo = document.getElementById('cuerpoMatrizGlobal'); cuerpo.innerHTML = ''; const inicio = (currentPage - 1) * itemsPerPage; const fin = inicio + itemsPerPage; const items = datosFiltradosGlobal.slice(inicio, fin);
             if(items.length === 0) cuerpo.innerHTML = `<tr><td colspan="8" class="px-6 py-10 text-center text-slate-500">No hay resultados.</td></tr>`;
-            else {
-                items.forEach(obj => {
-                    let fila = obj.filaData; let colorRec = "bg-slate-200 text-slate-700";
-                    if(fila[0] === "FICHAR") colorRec = "bg-emerald-100 text-emerald-800"; if(fila[0] === "RPC") colorRec = "bg-blue-100 text-blue-800"; if(fila[0] === "NCE") colorRec = "bg-red-100 text-red-800";
-                    let mediaText = obj.countNotas > 0 ? (obj.sumNotas / obj.countNotas).toFixed(2) : "-";
-
-                    cuerpo.innerHTML += `
-                        <tr class="hover:bg-slate-50 border-b">
-                            <td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${colorRec}">${fila[0] || '-'}</span></td>
-                            <td class="px-4 py-3 font-bold text-slate-800">${obj.nomReal}</td>
-                            <td class="px-4 py-3 text-slate-600">${fila[4] || '-'}</td>
-                            <td class="px-4 py-3 font-bold text-slate-700">${fila[5] || '-'}</td>
-                            <td class="px-4 py-3 text-xs text-slate-600 truncate max-w-[150px]">${fila[14] || '-'}</td>
-                            <td class="px-4 py-3 text-slate-700 text-center">${fila[9] || '-'}</td>
-                            <td class="px-4 py-3 text-center font-black text-emerald-600">${mediaText}</td>
-                            <td class="px-4 py-3 text-center"><button onclick="abrirPerfil('${obj.nomReal.replace(/'/g, "\\'")}')" class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded font-bold">Ver Perfil</button></td>
-                        </tr>`;
-                });
-            }
-            actualizarBotonesPaginacion();
+            else { items.forEach(obj => { let fila = obj.filaData; let colorRec = "bg-slate-200 text-slate-700"; if(fila[0] === "FICHAR") colorRec = "bg-emerald-100 text-emerald-800"; if(fila[0] === "RPC") colorRec = "bg-blue-100 text-blue-800"; if(fila[0] === "NCE") colorRec = "bg-red-100 text-red-800"; let mediaText = obj.count > 0 ? (obj.sum / obj.count).toFixed(2) : "-"; cuerpo.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${colorRec}">${fila[0] || '-'}</span></td><td class="px-4 py-3 font-bold text-slate-800">${obj.nomReal}</td><td class="px-4 py-3 text-slate-600">${fila[4] || '-'}</td><td class="px-4 py-3 font-bold text-slate-700">${fila[5] || '-'}</td><td class="px-4 py-3 text-xs text-slate-600 truncate max-w-[150px]">${fila[14] || '-'}</td><td class="px-4 py-3 text-slate-700 text-center">${fila[9] || '-'}</td><td class="px-4 py-3 text-center font-black text-emerald-600">${mediaText}</td><td class="px-4 py-3 text-center"><button onclick="abrirPerfil('${obj.nomReal.replace(/'/g, "\\'")}')" class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded font-bold">Ver Perfil</button></td></tr>`; }); }
+            document.getElementById("txtInfoPaginacion").innerText = `Página ${currentPage} de ${Math.ceil(datosFiltradosGlobal.length/itemsPerPage)||1} (${datosFiltradosGlobal.length} jug)`; document.getElementById("btnPrevPage").disabled = currentPage === 1; document.getElementById("btnNextPage").disabled = currentPage === (Math.ceil(datosFiltradosGlobal.length/itemsPerPage)||1);
         }
+        function cambiarPagina(delta) { const total = Math.ceil(datosFiltradosGlobal.length/itemsPerPage)||1; currentPage+=delta; if(currentPage<1)currentPage=1; if(currentPage>total)currentPage=total; renderizarTablaPaginada(); }
 
-        function actualizarBotonesPaginacion() {
-            const totalPages = Math.ceil(datosFiltradosGlobal.length / itemsPerPage) || 1; document.getElementById("txtInfoPaginacion").innerText = `Página ${currentPage} de ${totalPages} (${datosFiltradosGlobal.length} jug)`; document.getElementById("btnPrevPage").disabled = currentPage === 1; document.getElementById("btnNextPage").disabled = currentPage === totalPages;
-        }
-        function cambiarPagina(delta) {
-            const totalPages = Math.ceil(datosFiltradosGlobal.length / itemsPerPage) || 1; currentPage += delta; if(currentPage < 1) currentPage = 1; if(currentPage > totalPages) currentPage = totalPages; renderizarTablaPaginada();
-        }
-
-        // ================== MIS INFORMES (SCOUT) ==================
         function renderizarMisInformes() {
-            const tbody = document.getElementById('cuerpoMisInformes'); if(!tbody) return; tbody.innerHTML = '';
-            const txt = (document.getElementById('filtroTextoScout')?.value || "").toLowerCase();
-            
-            const misDatos = datosMatrizGlobal.filter(f => f[24] === datosUsuario.nombre && f.join(" ").toLowerCase().includes(txt));
-            
-            // Agrupamos para enseñar el último
-            let unicos = {};
-            misDatos.forEach(f => { if(f[2]) unicos[(f[2]+" "+(f[3]||"")).trim().toLowerCase()] = f; });
-            
-            Object.values(unicos).forEach(fila => {
-                let nomReal = (fila[2]+" "+(fila[3]||"")).trim();
-                let colorRec = "bg-slate-200 text-slate-700"; if(fila[0] === "FICHAR") colorRec = "bg-emerald-100 text-emerald-800"; if(fila[0] === "NCE") colorRec = "bg-red-100 text-red-800";
-                
-                tbody.innerHTML += `<tr class="border-b hover:bg-slate-50"><td class="px-4 py-2 font-bold text-[10px]"><span class="px-2 py-1 rounded uppercase ${colorRec}">${fila[0]||'-'}</span></td><td class="px-4 py-2 font-bold">${nomReal}</td><td class="px-4 py-2 font-bold text-sm">${fila[5]}</td><td class="px-4 py-2 font-black text-center">${fila[17]||'-'}</td><td class="px-4 py-2 text-center"><button onclick="abrirPerfil('${nomReal.replace(/'/g, "\\'")}')" class="text-xs bg-slate-800 text-white px-3 py-1 rounded font-bold">Ver Perfil</button></td></tr>`;
-            });
+            const tbody = document.getElementById('cuerpoMisInformes'); if(!tbody) return; tbody.innerHTML = ''; const txt = (document.getElementById('filtroTextoScout')?.value || "").toLowerCase(); const misDatos = datosMatrizGlobal.filter(f => f[24] === datosUsuario.nombre && f.join(" ").toLowerCase().includes(txt)); let unicos = {}; misDatos.forEach(f => { if(f[2]) unicos[(f[2]+" "+(f[3]||"")).trim().toLowerCase()] = f; });
+            Object.values(unicos).forEach(fila => { let nomReal = (fila[2]+" "+(fila[3]||"")).trim(); let cR = "bg-slate-200 text-slate-700"; if(fila[0] === "FICHAR") cR = "bg-emerald-100 text-emerald-800"; if(fila[0] === "NCE") cR = "bg-red-100 text-red-800"; tbody.innerHTML += `<tr class="border-b hover:bg-slate-50"><td class="px-4 py-2 font-bold text-[10px]"><span class="px-2 py-1 rounded uppercase ${cR}">${fila[0]||'-'}</span></td><td class="px-4 py-2 font-bold">${nomReal}</td><td class="px-4 py-2 font-bold text-sm">${fila[5]}</td><td class="px-4 py-2 font-black text-center">${fila[17]||'-'}</td><td class="px-4 py-2 text-center"><button onclick="abrirPerfil('${nomReal.replace(/'/g, "\\'")}')" class="text-xs bg-slate-800 text-white px-3 py-1 rounded font-bold">Ver Perfil</button></td></tr>`; });
         }
         document.getElementById('filtroTextoScout')?.addEventListener('input', renderizarMisInformes);
 
-        // ================== PERFIL DE JUGADOR (CON HISTORIAL) ==================
         function abrirPerfil(nombreCompletoBuscado) {
-            const keyBuscada = nombreCompletoBuscado.trim().toLowerCase();
-            const informesJugador = datosMatrizGlobal.filter(fila => {
-                if(!fila[2]) return false;
-                return (fila[2] + " " + (fila[3]||"")).trim().toLowerCase() === keyBuscada;
-            });
-            if(informesJugador.length === 0) return;
-
-            const base = informesJugador[informesJugador.length - 1]; // Datos más recientes
+            const key = nombreCompletoBuscado.trim().toLowerCase(); const informes = datosMatrizGlobal.filter(f => { if(!f[2]) return false; return (f[2]+" "+(f[3]||"")).trim().toLowerCase() === key; }); if(informes.length === 0) return;
+            const base = informes[informes.length - 1]; 
             document.getElementById("perfilNombre").innerText = nombreCompletoBuscado; document.getElementById("perfilPos").innerText = base[5] || "-"; document.getElementById("perfilEquipo").innerText = base[14] || "-"; document.getElementById("perfilLiga").innerText = base[13] || "-"; document.getElementById("perfilAno").innerText = base[4] || "-"; document.getElementById("perfil2Pos").innerText = base[6] || "-"; document.getElementById("perfilPie").innerText = base[9] || "-"; document.getElementById("perfilAltura").innerText = base[7] ? base[7] + " cm" : "-"; document.getElementById("perfilPeso").innerText = base[8] ? base[8] + " kg" : "-"; document.getElementById("perfilNac").innerText = base[10] || "-";
-
-            let sumaNotas = 0, contador = 0; const cajaInformes = document.getElementById("contenedorInformes"); cajaInformes.innerHTML = "";
-            document.getElementById("contadorInformes").innerText = informesJugador.length;
-
-            informesJugador.forEach(inf => {
-                // Sacar notas de las 4 columnas de este informe (si estuvieran rellenas en el pasado)
-                [17, 18, 19, 20].forEach(idx => {
-                    const n = parseFloat((inf[idx]||"").toString().replace(',','.'));
-                    if(!isNaN(n)) { sumaNotas += n; contador++; }
-                });
-
-                let bgRec = "bg-slate-200 text-slate-700"; if(inf[0]==="FICHAR") bgRec="bg-emerald-100 text-emerald-800";
-                let linkPdf = (inf[23] && inf[23].includes('http')) ? `<a href="${inf[23]}" target="_blank" class="text-blue-600 underline text-xs font-bold ml-2">📄 Ver PDF</a>` : '';
-                let linkVid = (inf[22] && inf[22].includes('http')) ? `<a href="${inf[22]}" target="_blank" class="text-blue-600 underline text-xs font-bold ml-2">📺 Ver Vídeo</a>` : '';
-
-                cajaInformes.innerHTML += `
-                    <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm mb-3">
-                        <div class="flex justify-between items-start mb-2">
-                            <div><p class="text-xs font-bold text-slate-400 uppercase">Autor: <span class="text-blue-600">${inf[24] || 'Scout'}</span></p>
-                            <span class="px-2 py-1 rounded text-[10px] font-black uppercase ${bgRec}">${inf[0]||'-'}</span>
-                            <span class="px-2 py-1 rounded text-[10px] bg-slate-100 font-bold ml-1">${inf[16]||'-'}</span>
-                            ${linkPdf} ${linkVid}</div>
-                            <div class="bg-slate-900 text-emerald-400 font-black text-xl px-3 py-1 rounded border border-slate-700">${inf[17]||'-'}</div>
-                        </div>
-                        <p class="text-sm font-bold text-slate-700 mb-1">ATRIBUTOS: <span class="font-normal text-slate-600">${inf[11]||'-'}</span></p>
-                        <p class="text-sm text-slate-600 bg-slate-50 p-3 rounded italic">"${inf[12]||'-'}"</p>
-                    </div>`;
+            let sN = 0, c = 0; const cajaInf = document.getElementById("contenedorInformes"); cajaInf.innerHTML = ""; document.getElementById("contadorInformes").innerText = informes.length;
+            informes.forEach(inf => {
+                [17, 18, 19, 20].forEach(idx => { const n = parseFloat((inf[idx]||"").toString().replace(',','.')); if(!isNaN(n)) { sN += n; c++; } });
+                let bR = "bg-slate-200 text-slate-700"; if(inf[0]==="FICHAR") bR="bg-emerald-100 text-emerald-800";
+                let lP = (inf[23] && inf[23].includes('http')) ? `<a href="${inf[23]}" target="_blank" class="text-blue-600 underline text-xs font-bold ml-2">📄 Ver PDF</a>` : ''; let lV = (inf[22] && inf[22].includes('http')) ? `<a href="${inf[22]}" target="_blank" class="text-blue-600 underline text-xs font-bold ml-2">📺 Ver Vídeo</a>` : '';
+                cajaInf.innerHTML += `<div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm mb-3"><div class="flex justify-between items-start mb-2"><div><p class="text-xs font-bold text-slate-400 uppercase">Autor: <span class="text-blue-600">${inf[24] || 'Scout'}</span></p><span class="px-2 py-1 rounded text-[10px] font-black uppercase ${bR}">${inf[0]||'-'}</span><span class="px-2 py-1 rounded text-[10px] bg-slate-100 font-bold ml-1">${inf[16]||'-'}</span>${lP} ${lV}</div><div class="bg-slate-900 text-emerald-400 font-black text-xl px-3 py-1 rounded border border-slate-700">${inf[17]||'-'}</div></div><p class="text-sm font-bold text-slate-700 mb-1">ATRIBUTOS: <span class="font-normal text-slate-600">${inf[11]||'-'}</span></p><p class="text-sm text-slate-600 bg-slate-50 p-3 rounded italic">"${inf[12]||'-'}"</p></div>`;
             });
-            document.getElementById("perfilNotaMedia").innerText = contador > 0 ? (sumaNotas/contador).toFixed(2) : "-";
-            document.getElementById("modalPerfilJugador").classList.remove("hidden");
+            document.getElementById("perfilNotaMedia").innerText = c > 0 ? (sN/c).toFixed(2) : "-"; document.getElementById("modalPerfilJugador").classList.remove("hidden");
         }
         function cerrarPerfil() { document.getElementById("modalPerfilJugador").classList.add("hidden"); }
 
-        // ================== NUEVO: DOSSIERS DE PARTIDO ==================
         let agrupacionDossiers = {};
-
         function generarDossiersDePartido() {
             agrupacionDossiers = {};
-            
-            // Recorremos la matriz para agrupar por "Ojeador + Equipo Evaluado"
-            datosMatrizGlobal.forEach(fila => {
-                if(!fila[2]) return; // Si no hay nombre, saltamos
-                const ojeador = fila[24] || "Desconocido";
-                const equipo = fila[14] || "Sin Equipo";
-                // Usamos una clave combinada
-                const key = `${ojeador}_${equipo}`;
-                
-                if(!agrupacionDossiers[key]) {
-                    agrupacionDossiers[key] = {
-                        ojeador: ojeador,
-                        equipo: equipo,
-                        fechaReciente: fila[16] || "-",
-                        jugadores: []
-                    };
-                }
-                agrupacionDossiers[key].jugadores.push(fila);
-            });
-
-            renderizarTarjetasDossier();
+            datosMatrizGlobal.forEach(fila => { if(!fila[2]) return; const oj = fila[24] || "Desconocido"; const eq = fila[14] || "Sin Equipo"; const key = `${oj}_${eq}`; if(!agrupacionDossiers[key]) agrupacionDossiers[key] = { ojeador: oj, equipo: eq, jugadores: [] }; agrupacionDossiers[key].jugadores.push(fila); });
+            renderTarjetasDossier();
         }
-
-        function renderizarTarjetasDossier() {
-            const isAdmin = datosUsuario.isAdmin;
-            const container = document.getElementById(isAdmin ? 'contenedorDossiersAdmin' : 'contenedorDossiersScout');
-            if(!container) return;
-            container.innerHTML = '';
-            
-            let query = "";
-            if(isAdmin) {
-                const searchInput = document.getElementById('buscadorDossierAdmin');
-                if(searchInput) {
-                    query = searchInput.value.toLowerCase();
-                    searchInput.addEventListener('input', renderizarTarjetasDossier);
-                }
-            }
-
-            Object.values(agrupacionDossiers).forEach(dossier => {
-                // Si es ojeador, solo ve los suyos
-                if(!isAdmin && dossier.ojeador !== datosUsuario.nombre) return;
-                // Si es admin y busca, filtramos
-                if(isAdmin && query && !dossier.equipo.toLowerCase().includes(query) && !dossier.ojeador.toLowerCase().includes(query)) return;
-
-                // Contar total de jugadores en este dossier (únicos)
-                let unicos = new Set();
-                dossier.jugadores.forEach(j => unicos.add((j[2]+" "+(j[3]||"")).trim()));
-
-                const keySegura = `${dossier.ojeador}_${dossier.equipo}`.replace(/'/g, "\\'");
-
-                container.innerHTML += `
-                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition relative">
-                        <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500 rounded-l-xl"></div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">📝 ${dossier.ojeador}</p>
-                        <h3 class="text-lg font-black text-slate-800 leading-tight">${dossier.equipo}</h3>
-                        <div class="mt-4 flex justify-between items-end">
-                            <div>
-                                <span class="bg-slate-100 text-slate-600 font-bold px-2 py-1 rounded text-xs">👥 ${unicos.size} Jugadores</span>
-                            </div>
-                            <button onclick="abrirVisorDossier('${keySegura}')" class="bg-slate-900 text-white font-bold text-xs px-3 py-1.5 rounded shadow">Ver Dossier</button>
-                        </div>
-                    </div>`;
+        function renderTarjetasDossier() {
+            const isAdmin = datosUsuario.isAdmin; const cont = document.getElementById(isAdmin ? 'contenedorDossiersAdmin' : 'contenedorDossiersScout'); if(!cont) return; cont.innerHTML = '';
+            let q = ""; if(isAdmin) { const i = document.getElementById('buscadorDossierAdmin'); if(i) { q = i.value.toLowerCase(); i.addEventListener('input', renderTarjetasDossier); } }
+            Object.values(agrupacionDossiers).forEach(d => {
+                if(!isAdmin && d.ojeador !== datosUsuario.nombre) return; if(isAdmin && q && !d.equipo.toLowerCase().includes(q) && !d.ojeador.toLowerCase().includes(q)) return;
+                let u = new Set(); d.jugadores.forEach(j => u.add((j[2]+" "+(j[3]||"")).trim())); const k = `${d.ojeador}_${d.equipo}`.replace(/'/g, "\\'");
+                cont.innerHTML += `<div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm relative"><div class="absolute top-0 left-0 w-1 h-full bg-emerald-500 rounded-l-xl"></div><p class="text-xs font-bold text-slate-400 uppercase mb-1">📝 ${d.ojeador}</p><h3 class="text-lg font-black text-slate-800 leading-tight">${d.equipo}</h3><div class="mt-4 flex justify-between items-end"><div><span class="bg-slate-100 text-slate-600 font-bold px-2 py-1 rounded text-xs">👥 ${u.size} Jug</span></div><button onclick="abrirVisorDossier('${k}')" class="bg-slate-900 text-white font-bold text-xs px-3 py-1.5 rounded shadow">Ver Dossier</button></div></div>`;
             });
         }
-
         function abrirVisorDossier(key) {
-            const dossier = agrupacionDossiers[key];
-            if(!dossier) return;
-
-            document.getElementById('dossierTitulo').innerText = `Dossier: ${dossier.equipo}`;
-            document.getElementById('dossierSubtitulo').innerText = `Scout: ${dossier.ojeador} | Evaluaciones: ${dossier.jugadores.length}`;
-            
-            const cuerpo = document.getElementById('cuerpoVisorDossier');
-            cuerpo.innerHTML = '';
-
-            // Renderizamos los jugadores de este dossier como tarjetas
-            dossier.jugadores.forEach(inf => {
-                let nomComp = (inf[2] + " " + (inf[3] || "")).trim();
-                let bgRec = "bg-slate-200 text-slate-700"; if(inf[0]==="FICHAR") bgRec="bg-emerald-100 text-emerald-800";
-                
-                cuerpo.innerHTML += `
-                    <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm flex flex-col justify-between">
-                        <div>
-                            <div class="flex justify-between items-start mb-2">
-                                <span class="px-2 py-1 rounded text-[10px] font-black uppercase ${bgRec}">${inf[0]||'-'}</span>
-                                <div class="bg-slate-900 text-emerald-400 font-black text-lg px-2 py-1 rounded">${inf[17]||'-'}</div>
-                            </div>
-                            <h4 class="font-bold text-slate-800 text-lg leading-tight mb-1">${nomComp}</h4>
-                            <p class="text-xs font-bold text-slate-400 mb-2">${inf[5] || 'POS'} | ${inf[4] || 'AÑO'} | Pie: ${inf[9] || '-'}</p>
-                            <p class="text-sm font-bold text-slate-700 mb-1 line-clamp-1">ATR: <span class="font-normal text-slate-600">${inf[11]||'-'}</span></p>
-                            <p class="text-xs text-slate-600 bg-slate-50 p-2 rounded italic line-clamp-3">"${inf[12]||'-'}"</p>
-                        </div>
-                        <button onclick="abrirPerfil('${nomComp.replace(/'/g, "\\'")}')" class="mt-4 w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded text-xs transition">Abrir Perfil Completo</button>
-                    </div>`;
-            });
-
+            const d = agrupacionDossiers[key]; if(!d) return; document.getElementById('dossierTitulo').innerText = `Dossier: ${d.equipo}`; document.getElementById('dossierSubtitulo').innerText = `Scout: ${d.ojeador}`; const c = document.getElementById('cuerpoVisorDossier'); c.innerHTML = '';
+            d.jugadores.forEach(inf => { let nomComp = (inf[2] + " " + (inf[3] || "")).trim(); let bgRec = "bg-slate-200 text-slate-700"; if(inf[0]==="FICHAR") bgRec="bg-emerald-100 text-emerald-800"; c.innerHTML += `<div class="bg-white border border-slate-200 rounded-lg p-4 shadow flex flex-col justify-between"><div><div class="flex justify-between items-start mb-2"><span class="px-2 py-1 rounded text-[10px] font-black uppercase ${bgRec}">${inf[0]||'-'}</span><div class="bg-slate-900 text-emerald-400 font-black px-2 py-1 rounded">${inf[17]||'-'}</div></div><h4 class="font-bold text-slate-800 text-lg mb-1">${nomComp}</h4><p class="text-xs font-bold text-slate-400 mb-2">${inf[5] || 'POS'} | ${inf[4] || 'AÑO'} | Pie: ${inf[9] || '-'}</p><p class="text-xs text-slate-600 bg-slate-50 p-2 rounded italic line-clamp-3">"${inf[12]||'-'}"</p></div><button onclick="abrirPerfil('${nomComp.replace(/'/g, "\\'")}')" class="mt-4 w-full bg-slate-100 hover:bg-slate-200 font-bold py-2 rounded text-xs">Perfil Completo</button></div>`; });
             document.getElementById('modalVisorDossier').classList.remove('hidden');
         }
         function cerrarVisorDossier() { document.getElementById('modalVisorDossier').classList.add('hidden'); }
+        async function exportarPdf(id, nom) { const b = event.currentTarget; const tx = b.innerText; b.innerText = "Calculando..."; b.disabled = true; try { const el = document.getElementById(id); const cv = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff" }); const im = cv.toDataURL('image/jpeg', 1.0); const { jsPDF } = window.jspdf; const pf = new jsPDF('p', 'mm', 'a4'); const m = 10; const w = pf.internal.pageSize.getWidth() - (m*2); const h = (cv.height * w) / cv.width; pf.addImage(im, 'JPEG', m, m, w, h); pf.save(`${nom}.pdf`); } catch(e){} finally { b.innerText = tx; b.disabled = false; } }
 
-        // ================== PDF EXPORT ==================
-        async function exportarPdf(idElemento, nombreArchivo) {
+        // =======================================================================================
+        // FASE 3: CAMPOGRAMAS ESTILO SCOUTDECISIÓN CON FORMACIONES ILIMITADAS
+        // =======================================================================================
+        
+        let customLegends = {
+            'admin': [{ id: 'leg_def', color: '#10b981', text: 'Opción 1' }, { id: 'leg_def2', color: '#ef4444', text: 'Opción 2' }],
+            'scout': [{ id: 'leg_def3', color: '#3b82f6', text: 'Interesante' }]
+        };
+
+        const formacionesLibres = {
+            "4-4-2": [ ["POR"], ["LI", "DFC 1", "DFC 2", "LD"], ["MI", "MC 1", "MC 2", "MD"], [], ["DC 1", "DC 2"] ],
+            "4-2-3-1": [ ["POR"], ["LI", "DFC 1", "DFC 2", "LD"], ["MCD 1", "MCD 2"], ["EI", "MP", "ED"], ["DC"] ],
+            "4-3-3": [ ["POR"], ["LI", "DFC 1", "DFC 2", "LD"], ["MC Izq", "MCD", "MC Der"], [], ["EI", "DC", "ED"] ],
+            "3-5-2": [ ["POR"], ["DFC Izq", "DFC Cen", "DFC Der"], ["CAI", "MC 1", "MCD", "MC 2", "CAD"], [], ["DC 1", "DC 2"] ],
+            "3-4-3": [ ["POR"], ["DFC 1", "DFC 2", "DFC 3"], ["MI", "MC 1", "MC 2", "MD"], [], ["EI", "DC", "ED"] ],
+            "5-3-2": [ ["POR"], ["CAI", "DFC 1", "DFC 2", "DFC 3", "CAD"], ["MC Izq", "MCD", "MC Der"], [], ["DC 1", "DC 2"] ],
+            "4-1-4-1": [ ["POR"], ["LI", "DFC 1", "DFC 2", "LD"], ["MCD"], ["MI", "MC 1", "MC 2", "MD"], ["DC"] ]
+        };
+
+        function inicializarCampograma(prefijo) {
+            renderizarLeyenda(prefijo);
+            let unicos = {};
+            let baseDatos = prefijo === 'admin' ? datosMatrizGlobal : datosMatrizGlobal.filter(f => f[24] === datosUsuario.nombre);
+            baseDatos.forEach(f => { if(f[2]) unicos[(f[2]+" "+(f[3]||"")).trim().toLowerCase()] = f; });
+            const filtrados = Object.values(unicos).sort((a,b) => parseFloat((b[17]||"0").toString().replace(',','.')) - parseFloat((a[17]||"0").toString().replace(',','.')));
+            
+            const contenedor = document.getElementById(`listaDrag${prefijo === 'admin' ? 'Admin' : 'Scout'}`); contenedor.innerHTML = '';
+            filtrados.forEach((fila, i) => {
+                const nombreCorto = fila[2] + " " + (fila[3] ? fila[3].charAt(0) + "." : "");
+                contenedor.innerHTML += `
+                    <div class="ficha-drag" draggable="true" ondragstart="iniciarDrag(event, '${nombreCorto}', '${fila[17]||'-'}', '${fila[4]||'-'}', '${fila[14]||'-'}', '${fila[7]||'-'}', '${prefijo}')">
+                        <span class="w-8 font-black text-slate-400 text-xs">${fila[5]}</span>
+                        <span class="flex-1 truncate">${nombreCorto} <span class="text-xs font-normal text-slate-400">(${fila[4]})</span></span>
+                        <span class="text-emerald-400 font-black">${fila[17]||'-'}</span>
+                    </div>`;
+            });
+            dibujarFormacion("4-2-3-1", prefijo);
+        }
+
+        document.getElementById('buscadorDragAdmin')?.addEventListener('input', (e) => fDrag(e, 'admin')); document.getElementById('buscadorDragScout')?.addEventListener('input', (e) => fDrag(e, 'scout'));
+        function fDrag(e, p) { const txt = e.target.value.toLowerCase(); Array.from(document.getElementById(`listaDrag${p==='admin'?'Admin':'Scout'}`).children).forEach(d => { d.style.display = d.innerText.toLowerCase().includes(txt) ? 'flex' : 'none'; }); }
+
+        // LEYENDA (Colores Personalizados)
+        function renderizarLeyenda(prefijo) {
+            const list = document.getElementById(`legend-list-${prefijo}`); list.innerHTML = '';
+            customLegends[prefijo].forEach(item => {
+                list.innerHTML += `<div class="flex items-center gap-1 bg-white px-2 py-1 rounded shadow-sm border border-slate-200"><div class="w-3 h-3 rounded-full" style="background-color: ${item.color}"></div><span class="text-xs font-bold text-slate-700">${item.text}</span></div>`;
+            });
+        }
+        function addLegend(prefijo) {
+            const color = document.getElementById(`newColor-${prefijo}`).value; const text = document.getElementById(`newName-${prefijo}`).value.trim();
+            if(text) { customLegends[prefijo].push({ id: 'leg_'+Date.now(), color: color, text: text }); document.getElementById(`newName-${prefijo}`).value = ''; renderizarLeyenda(prefijo); actualizarSelectoresColor(prefijo); }
+        }
+
+        // PINTAR CAMPO Y FORMACIÓN
+        function dibujarFormacion(codigo, prefijo) {
+            const f = formacionesLibres[codigo];
+            for(let i=0; i<=4; i++) {
+                const row = document.getElementById(`${prefijo}-pitch-row-${i}`); row.innerHTML = "";
+                f[i].forEach(posName => {
+                    // El Slot ahora tiene un punto blanco estilo ScoutDecisión
+                    row.innerHTML += `
+                        <div class="sd-slot" data-posname="${posName}" ondrop="soltarEnCampo(event, '${prefijo}')" ondragover="permitirSoltarCampo(event)">
+                            <div class="sd-cards-container"></div>
+                            <div class="sd-dot"></div>
+                            <div class="sd-pos-label">${posName}</div>
+                        </div>`;
+                });
+            }
+            actualizarListadoSD(prefijo);
+        }
+
+        // DRAG & DROP
+        function iniciarDrag(ev, nombre, nota, ano, equipo, altura, prefijo) { 
+            ev.dataTransfer.setData("text/plain", JSON.stringify({ n: nombre, nt: nota, a: ano, eq: equipo, h: altura, p: prefijo })); 
+            // Si arrastramos desde dentro del campo, marcamos el elemento
+            if(ev.target.classList.contains('sd-card')) { ev.target.classList.add('dragging-card'); }
+        }
+        function permitirSoltarCampo(ev) { 
+            ev.preventDefault(); let slot = ev.target.closest('.sd-slot'); if(slot) slot.classList.add('drag-over'); 
+        }
+        document.addEventListener('dragleave', (ev) => { if(ev.target.classList?.contains('sd-slot')) ev.target.classList.remove('drag-over'); });
+
+        function soltarEnCampo(ev, prefijoDestino) {
+            ev.preventDefault();
+            let slot = ev.target.closest('.sd-slot'); if(!slot) return; slot.classList.remove('drag-over');
+            
+            const cont = slot.querySelector('.sd-cards-container');
+            const draggingCard = document.querySelector('.dragging-card');
+            
+            // Si viene de arrastrar dentro del propio campo (Reordenamiento)
+            if (draggingCard) {
+                // Encontrar dónde lo ha soltado verticalmente (insertBefore)
+                const afterElement = getDragAfterElement(cont, ev.clientY);
+                if (afterElement == null) { cont.appendChild(draggingCard); } else { cont.insertBefore(draggingCard, afterElement); }
+                draggingCard.classList.remove('dragging-card');
+                actualizarListadoSD(prefijoDestino);
+                return;
+            }
+
+            // Si viene de la barra lateral (Nuevo)
+            const dataStr = ev.dataTransfer.getData("text/plain"); if(!dataStr) return;
+            const d = JSON.parse(dataStr); if(d.p !== prefijoDestino) return;
+
+            // Generar options para el select de la tarjeta (colores leyenda)
+            let optionsHTML = `<option value="#334155" style="background:#334155; color:white">Neutro</option>`;
+            customLegends[prefijoDestino].forEach(l => { optionsHTML += `<option value="${l.color}" style="background:${l.color}; color:white">${l.text}</option>`; });
+
+            const card = document.createElement('div');
+            card.className = "sd-card bg-slate-700"; card.draggable = true; card.dataset.nom = d.n; card.dataset.nota = d.nt; card.dataset.ano = d.a; card.dataset.eq = d.eq;
+            card.ondragstart = (e) => iniciarDrag(e, d.n, d.nt, d.a, d.eq, d.h, prefijoDestino);
+            card.ondragend = (e) => card.classList.remove('dragging-card');
+
+            card.innerHTML = `
+                <div class="c-name" title="${d.n}">${d.n} / ${d.a}</div>
+                <div class="c-info">${d.eq} / ${d.h ? d.h+'cm' : '-'}</div>
+                <div class="sd-card-controls" data-html2canvas-ignore>
+                    <button type="button" onclick="this.closest('.sd-card').remove(); actualizarListadoSD('${prefijoDestino}')" class="sd-btn-del">X</button>
+                    <select class="text-black text-[9px] outline-none" onchange="this.closest('.sd-card').style.backgroundColor = this.value">${optionsHTML}</select>
+                </div>
+            `;
+            cont.appendChild(card);
+            actualizarListadoSD(prefijoDestino);
+        }
+
+        // Lógica matemática para saber dónde colocar la tarjeta al ordenar
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.sd-card:not(.dragging-card)')];
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2;
+                if (offset < 0 && offset > closest.offset) { return { offset: offset, element: child }; } else { return closest; }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // Cuando se añade un nuevo color a la leyenda, hay que meterlo en los selectores de las tarjetas existentes
+        function actualizarSelectoresColor(prefijo) {
+            const pitch = document.getElementById(`pitch-${prefijo}`);
+            let optionsHTML = `<option value="#334155" style="background:#334155; color:white">Neutro</option>`;
+            customLegends[prefijo].forEach(l => { optionsHTML += `<option value="${l.color}" style="background:${l.color}; color:white">${l.text}</option>`; });
+            pitch.querySelectorAll('select').forEach(sel => {
+                const valAntiguo = sel.value; sel.innerHTML = optionsHTML; sel.value = valAntiguo;
+            });
+        }
+
+        // LISTADO INFERIOR
+        function actualizarListadoSD(prefijo) {
+            const dom = document.getElementById(prefijo === 'admin' ? 'cuerpoListadoAdmin' : 'cuerpoListadoScout'); dom.innerHTML = '';
+            const slots = document.getElementById(`pitch-${prefijo}`).querySelectorAll('.sd-slot');
+            let hay = false;
+
+            slots.forEach(slot => {
+                const pos = slot.dataset.posname;
+                const cards = Array.from(slot.querySelectorAll('.sd-card')).map(c => ({ n: c.dataset.nom, a: c.dataset.ano, nt: c.dataset.nota, col: c.style.backgroundColor || '#334155' }));
+                if(cards.length > 0) {
+                    hay = true;
+                    let hList = `<div><h4 class="font-bold text-slate-600 border-b border-slate-300 pb-1 mb-2">${pos}</h4><ul class="space-y-1">`;
+                    cards.forEach(c => { hList += `<li class="flex justify-between items-center bg-slate-50 p-1 rounded border border-slate-100 text-xs"><div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full" style="background:${c.col}"></div><span class="font-bold">${c.n} <span class="font-normal text-slate-400">(${c.a})</span></span></div><span class="font-black text-emerald-600">${c.nt}</span></li>`; });
+                    hList += `</ul></div>`; dom.innerHTML += hList;
+                }
+            });
+        }
+
+        // PDF EXPORT
+        async function exportarShadowTeam(idContenedor, nombreArchivo) {
             const btn = event.currentTarget; const textoOriginal = btn.innerText; btn.innerText = "Calculando PDF..."; btn.disabled = true;
             try {
-                const elemento = document.getElementById(idElemento);
-                const canvas = await html2canvas(elemento, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+                const zonaPdf = document.getElementById(idContenedor).querySelector('.flex-col.gap-6') || document.getElementById(idContenedor).querySelector('.flex-col.gap-8'); 
+                zonaPdf.classList.add('pdf-export-mode');
+                const canvas = await html2canvas(zonaPdf, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+                zonaPdf.classList.remove('pdf-export-mode');
+
                 const imgData = canvas.toDataURL('image/jpeg', 1.0); const { jsPDF } = window.jspdf; const pdf = new jsPDF('p', 'mm', 'a4');
                 const margin = 10; const pdfWidth = pdf.internal.pageSize.getWidth() - (margin * 2); const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
                 pdf.addImage(imgData, 'JPEG', margin, margin, pdfWidth, pdfHeight); pdf.save(`${nombreArchivo}.pdf`);
