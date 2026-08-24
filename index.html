@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Portal RCL Scout Group</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         .tooltip { position: relative; display: inline-block; cursor: help; }
         .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #1e293b; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 50; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 0.75rem; font-weight: normal; line-height: 1.4; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
@@ -31,92 +33,126 @@
         </div>
     </div>
 
-    <!-- PANTALLA OJEADOR -->
+    <!-- ================= PANTALLA OJEADOR ================= -->
     <div id="dashboard-screen" class="hidden min-h-screen flex flex-col">
         <header class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-10">
             <div class="flex items-center gap-3"><img src="https://santapolacf.es/images/ESCUDO3.png" class="h-10"><h1 class="text-lg font-bold">RCL SCOUT GROUP</h1></div>
             <p id="nombreUsuario" class="font-bold bg-blue-800 px-4 py-1 rounded-full text-sm"></p>
         </header>
+
+        <nav class="bg-white shadow-sm border-b border-slate-200 flex justify-center gap-8 font-bold text-slate-500">
+            <button onclick="cambiarTab('scout', 'tab-registro')" class="tab-btn scout-tab active py-4 px-2 hover:text-emerald-600 transition">📝 Nuevo Registro</button>
+            <button onclick="cambiarTab('scout', 'tab-mis-informes')" class="tab-btn scout-tab py-4 px-2 hover:text-emerald-600 transition">📂 Mis Informes</button>
+            <button onclick="cambiarTab('scout', 'tab-mis-dossiers')" class="tab-btn scout-tab py-4 px-2 hover:text-emerald-600 transition">📁 Dossiers de Partido</button>
+        </nav>
         
-        <main class="p-4 md:p-6 max-w-[1400px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <main class="p-4 md:p-6 max-w-[1400px] mx-auto w-full">
             
-            <div class="lg:col-span-4 flex flex-col gap-6">
-                <div id="cajaAsignacion" class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 relative">
-                    <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500 rounded-l-xl"></div>
-                    <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold uppercase">Asignación Actual</span>
-                    <h3 id="txtPartido" class="text-xl font-black mt-4 text-slate-800">Cargando...</h3>
-                    <p class="text-slate-600 text-sm mt-2 mb-5 bg-slate-50 p-2 rounded border">Objetivo: <span id="txtEquipo" class="font-bold text-slate-800"></span></p>
-                    
-                    <div class="flex flex-col gap-3">
-                        <a id="btnVerPartido" href="#" target="_blank" class="flex items-center justify-center gap-2 w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded shadow-sm hidden">▶️ Ver Partido Asignado</a>
-                        <button id="btnCompletarOjeador" onclick="completarAsignacion()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded shadow-sm transition">✅ Completar Tarea</button>
+            <!-- TAB OJEADOR: REGISTRO -->
+            <div id="tab-registro" class="tab-content scout-content active">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    <div class="lg:col-span-4 flex flex-col gap-6">
+                        <div id="cajaAsignacion" class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 relative">
+                            <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500 rounded-l-xl"></div>
+                            <span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full text-xs font-bold uppercase">Asignación Actual</span>
+                            <h3 id="txtPartido" class="text-xl font-black mt-4 text-slate-800">Cargando...</h3>
+                            <p class="text-slate-600 text-sm mt-2 mb-5 bg-slate-50 p-2 rounded border">Objetivo: <span id="txtEquipo" class="font-bold text-slate-800"></span></p>
+                            
+                            <div class="flex flex-col gap-3">
+                                <a id="btnVerPartido" href="#" target="_blank" class="flex items-center justify-center gap-2 w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded shadow-sm hidden">▶️ Ver Partido Asignado</a>
+                                <button id="btnCompletarOjeador" onclick="completarAsignacion()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded shadow-sm transition">✅ Completar Tarea</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-8 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                        <div class="bg-blue-900 text-white p-4 flex justify-between items-center"><h2 class="font-bold text-lg">REGISTRO DE NUEVO JUGADOR</h2></div>
+                        <div class="p-6 md:p-8">
+                            <form id="formScouting" class="space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-slate-100">
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">REC <span class="text-blue-500">(?)</span><span class="tooltiptext">FICHAR: Firmar ya.<br>RPC: Tener en cuenta.<br>NMA: Necesita análisis.<br>NCE: No da nivel.<br>SP: Supera posibilidades.</span></label><select id="rec" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="FICHAR">FICHAR</option><option value="RPC">RPC</option><option value="NMA">NMA</option><option value="NCE">NCE</option><option value="SP">SP</option></select></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">NIVEL <span class="text-blue-500">(?)</span><span class="tooltiptext">NI: Inferior.<br>1: Suplente.<br>2: Rotación.<br>3: Titular.<br>4: Estrella.<br>NS: Supera Nivel.<br>AP: Alto Potencial.</span></label><select id="nivel" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="NI">NI</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="NS">NS</option><option value="AP">AP</option></select></div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">NOMBRE</label><input type="text" id="nombre" class="w-full px-3 py-2 border rounded autocapitalize outline-none focus:border-blue-600" required></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">APELLIDO/S</label><input type="text" id="apellidos" class="w-full px-3 py-2 border rounded autocapitalize outline-none focus:border-blue-600" required></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">AÑO</label><input type="text" id="ano" placeholder="ej: '04" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
+                                </div>
+                                
+                                <div id="cajaAutocomplete" class="hidden p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800 flex justify-between items-center mb-6">
+                                    <span>💡 <strong>Jugador detectado en Matriz.</strong> ¿Cargar sus datos básicos?</span> 
+                                    <button type="button" onclick="aplicarAutocomplete()" class="bg-blue-600 text-white px-3 py-1 rounded font-bold hover:bg-blue-700 shadow-sm transition">Autocompletar</button>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-6 border-b border-slate-100">
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">POSICIÓN</label><select id="pos" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="POR">POR</option><option value="DFC">DFC</option><option value="LD">LD</option><option value="LI">LI</option><option value="MC">MC</option><option value="MD">MD</option><option value="MI">MI</option><option value="MP">MP</option><option value="ED">ED</option><option value="EI">EI</option><option value="DC">DC</option><option value="DM">DM</option></select></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">2POS</label><input type="text" id="pos2" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">PIE</label><select id="pie" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"><option value="">Seleccionar...</option><option value="D">D</option><option value="I">I</option><option value="A">A</option></select></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">ALTURA (cm)</label><input type="number" id="altura" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">PESO (kg)</label><input type="number" id="peso" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">NACIONALIDAD</label><input type="text" id="nacionalidad" value="ESP" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
+                                </div>
+
+                                <div class="space-y-4 pb-6 border-b border-slate-100">
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">ATRIBUTOS CLAVE <span class="text-blue-500">(?)</span></label><input type="text" id="atributos" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">DESCRIPCIÓN <span class="text-blue-500">(?)</span></label><textarea id="descripcion" rows="3" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></textarea></div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 pb-6 border-b border-slate-100">
+                                    <div class="md:col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">LIGA <span class="text-blue-500">(?)</span></label><input type="text" id="liga" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
+                                    <div class="md:col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">EQUIPO</label><input type="text" id="equipo" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">NIVEL EQ. <span class="text-blue-500">(?)</span></label><input type="number" id="nivelEquipo" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">FECHA <span class="text-blue-500">(?)</span></label><input type="text" id="fecha" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">VALORACIÓN <span class="text-blue-500">(?)</span></label><input type="number" id="val" step="0.5" class="w-full px-3 py-2 border rounded font-bold text-lg outline-none focus:border-blue-600 text-emerald-600" required></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">LINK FFCV</label><input type="url" id="link" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
+                                </div>
+
+                                <div class="bg-slate-50 p-4 rounded border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">📄 Dossier Individual (PDF Opcional)</label><input type="file" id="jugadorPdf" accept=".pdf" class="w-full text-sm text-slate-500 bg-white border p-1 rounded"></div>
+                                    <div><label class="block text-sm font-bold text-slate-700 mb-1">📺 Link de Vídeo (YouTube, Hudl...)</label><input type="url" id="jugadorVideoUrl" placeholder="https://..." class="w-full px-3 py-2 border rounded text-sm outline-none focus:border-blue-600"></div>
+                                </div>
+
+                                <button type="submit" id="btnEnviarRegistro" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-4 rounded-lg shadow transition text-lg">REGISTRAR JUGADOR EN LA MATRIZ</button>
+                                <p id="mensajeExitoRegistro" class="text-center font-bold text-emerald-600 hidden mt-2">¡Jugador guardado en la Base de Datos!</p>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="lg:col-span-8 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-                <div class="bg-blue-900 text-white p-4 flex justify-between items-center">
-                    <h2 class="font-bold text-lg">REGISTRO DE NUEVO JUGADOR</h2>
-                </div>
-                <div class="p-6 md:p-8">
-                    <form id="formScouting" class="space-y-6">
-                        
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-slate-100">
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">REC <span class="text-blue-500">(?)</span><span class="tooltiptext">FICHAR: Firmar ya.<br>RPC: Tener en cuenta.<br>NMA: Necesita análisis.<br>NCE: No da nivel.<br>SP: Supera posibilidades.</span></label><select id="rec" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="FICHAR">FICHAR</option><option value="RPC">RPC</option><option value="NMA">NMA</option><option value="NCE">NCE</option><option value="SP">SP</option></select></div>
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">NIVEL <span class="text-blue-500">(?)</span><span class="tooltiptext">NI: Inferior.<br>1: Suplente.<br>2: Rotación.<br>3: Titular.<br>4: Estrella.<br>NS: Supera Nivel.<br>AP: Alto Potencial.</span></label><select id="nivel" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="NI">NI</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="NS">NS</option><option value="AP">AP</option></select></div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1">NOMBRE</label><input type="text" id="nombre" class="w-full px-3 py-2 border rounded autocapitalize outline-none focus:border-blue-600" required></div>
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1">APELLIDO/S</label><input type="text" id="apellidos" class="w-full px-3 py-2 border rounded autocapitalize outline-none focus:border-blue-600" required></div>
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1">AÑO</label><input type="text" id="ano" placeholder="ej: '04" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
-                        </div>
-                        
-                        <!-- RECUADRO AUTOCOMPLETAR -->
-                        <div id="cajaAutocomplete" class="hidden p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800 flex justify-between items-center mb-6">
-                            <span>💡 <strong>Jugador detectado en Matriz.</strong> ¿Cargar sus datos básicos?</span> 
-                            <button type="button" onclick="aplicarAutocomplete()" class="bg-blue-600 text-white px-3 py-1 rounded font-bold hover:bg-blue-700 shadow-sm transition">Autocompletar</button>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-6 border-b border-slate-100">
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1">POSICIÓN</label><select id="pos" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="POR">POR</option><option value="DFC">DFC</option><option value="LD">LD</option><option value="LI">LI</option><option value="MC">MC</option><option value="MD">MD</option><option value="MI">MI</option><option value="MP">MP</option><option value="ED">ED</option><option value="EI">EI</option><option value="DC">DC</option><option value="DM">DM</option></select></div>
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1">2POS</label><input type="text" id="pos2" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1">PIE</label><select id="pie" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"><option value="">Seleccionar...</option><option value="D">D</option><option value="I">I</option><option value="A">A</option></select></div>
-                            
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1">ALTURA (cm)</label><input type="number" id="altura" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1">PESO (kg)</label><input type="number" id="peso" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1">NACIONALIDAD</label><input type="text" id="nacionalidad" value="ESP" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
-                        </div>
-
-                        <div class="space-y-4 pb-6 border-b border-slate-100">
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">ATRIBUTOS CLAVE <span class="text-blue-500">(?)</span><span class="tooltiptext">Cualidades principales, cortas.</span></label><input type="text" id="atributos" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">DESCRIPCIÓN <span class="text-blue-500">(?)</span><span class="tooltiptext">Estilo de juego, físico y opinión.</span></label><textarea id="descripcion" rows="3" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></textarea></div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 pb-6 border-b border-slate-100">
-                            <div class="md:col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">LIGA <span class="text-blue-500">(?)</span><span class="tooltiptext">Ej: 1ªFFCV - G4</span></label><input type="text" id="liga" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
-                            <div class="md:col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">EQUIPO</label><input type="text" id="equipo" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
-                            
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">NIVEL EQ. <span class="text-blue-500">(?)</span><span class="tooltiptext">0-10. El 5 es igual al nuestro.</span></label><input type="number" id="nivelEquipo" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">FECHA <span class="text-blue-500">(?)</span><span class="tooltiptext">Veces visto + fecha. Ej: 1-12SEP</span></label><input type="text" id="fecha" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">VALORACIÓN <span class="text-blue-500">(?)</span><span class="tooltiptext">Del 0 al 10 en incrementos de 0.5.</span></label><input type="number" id="val" step="0.5" class="w-full px-3 py-2 border rounded font-bold text-lg outline-none focus:border-blue-600 text-emerald-600" required></div>
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1">LINK FFCV</label><input type="url" id="link" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
-                        </div>
-
-                        <div class="bg-slate-50 p-4 rounded border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1">📄 Dossier Individual (PDF Opcional)</label><input type="file" id="jugadorPdf" accept=".pdf" class="w-full text-sm text-slate-500 bg-white border p-1 rounded"></div>
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1">📺 Link de Vídeo (YouTube, Hudl...)</label><input type="url" id="jugadorVideoUrl" placeholder="https://..." class="w-full px-3 py-2 border rounded text-sm outline-none focus:border-blue-600"></div>
-                        </div>
-
-                        <button type="submit" id="btnEnviarRegistro" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-black py-4 rounded-lg shadow transition text-lg">REGISTRAR JUGADOR EN LA MATRIZ</button>
-                        <p id="mensajeExitoRegistro" class="text-center font-bold text-emerald-600 hidden mt-2">¡Jugador guardado en la Base de Datos!</p>
-                    </form>
+            <!-- TAB OJEADOR: MIS INFORMES -->
+            <div id="tab-mis-informes" class="tab-content scout-content">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-blue-900 text-white px-6 py-3 border-b"><h2 class="font-bold text-sm">HISTORIAL DE MIS EVALUACIONES</h2></div>
+                    <div class="p-4 border-b border-slate-200 bg-slate-50">
+                        <input type="text" id="filtroTextoScout" placeholder="Buscar jugador, equipo..." class="w-full px-4 py-2 border rounded outline-none focus:border-blue-500 text-sm">
+                    </div>
+                    <div class="overflow-x-auto min-h-[400px]">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
+                            <thead class="bg-white border-b border-slate-200 text-slate-600 uppercase text-xs font-bold">
+                                <tr><th class="px-4 py-3">Rec</th><th class="px-4 py-3">Nombre</th><th class="px-4 py-3">Pos</th><th class="px-4 py-3 text-center">Nota</th><th class="px-4 py-3 text-center">Perfil</th></tr>
+                            </thead>
+                            <tbody id="cuerpoMisInformes" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
+
+            <!-- TAB OJEADOR: DOSSIERS DE PARTIDO -->
+            <div id="tab-mis-dossiers" class="tab-content scout-content">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h2 class="text-xl font-black mb-6 border-b pb-2">Mis Dossiers de Partido (Agrupados)</h2>
+                    <div id="contenedorDossiersScout" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Se rellenará por JS -->
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
-    <!-- PANTALLA ADMINISTRADOR -->
+    <!-- ================= PANTALLA ADMINISTRADOR ================= -->
     <div id="admin-screen" class="hidden min-h-screen flex flex-col bg-slate-100">
         <header class="bg-slate-900 text-white p-4 shadow-md flex justify-between items-center sticky top-0 z-10">
             <h1 class="text-lg font-bold">🛡️ DIRECCIÓN DEPORTIVA</h1>
@@ -125,11 +161,13 @@
 
         <nav class="bg-white shadow-sm border-b border-slate-200 flex justify-center gap-8 font-bold text-slate-500">
             <button onclick="cambiarTab('admin', 'tab-coord')" class="tab-btn admin-tab active py-4 px-2 hover:text-emerald-600 transition">🛡️ Coordinación</button>
-            <button onclick="cambiarTab('admin', 'tab-bd')" class="tab-btn admin-tab py-4 px-2 hover:text-emerald-600 transition">📊 Base de Datos y Filtros</button>
+            <button onclick="cambiarTab('admin', 'tab-bd')" class="tab-btn admin-tab py-4 px-2 hover:text-emerald-600 transition">📊 Base de Datos</button>
+            <button onclick="cambiarTab('admin', 'tab-dossiers-global')" class="tab-btn admin-tab py-4 px-2 hover:text-emerald-600 transition">📁 Dossiers Globales</button>
         </nav>
 
         <main class="p-6 max-w-7xl mx-auto w-full space-y-8">
             
+            <!-- ADMIN: COORDINACIÓN -->
             <div id="tab-coord" class="tab-content admin-content active">
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="bg-slate-800 text-white px-6 py-3 border-b"><h2 class="font-bold text-sm">COORDINACIÓN DE TAREAS</h2></div>
@@ -146,7 +184,7 @@
                 </div>
             </div>
 
-            <!-- TABLA Y PAGINACIÓN ARREGLADAS (NUEVOS ÍNDICES) -->
+            <!-- ADMIN: BASE DE DATOS GLOBAL -->
             <div id="tab-bd" class="tab-content admin-content">
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="bg-blue-900 text-white px-6 py-3 border-b flex justify-between items-center">
@@ -154,7 +192,7 @@
                     </div>
                     
                     <div class="p-4 border-b border-slate-200 bg-slate-50 grid grid-cols-1 md:grid-cols-6 gap-3">
-                        <div class="md:col-span-2"><label class="text-xs font-bold text-slate-500 uppercase">Buscar (Texto)</label><input type="text" id="filtroTexto" placeholder="Nombre, equipo, atributos..." class="w-full px-3 py-1.5 border rounded outline-none focus:border-blue-500 text-sm"></div>
+                        <div class="md:col-span-2"><label class="text-xs font-bold text-slate-500 uppercase">Buscar (Texto)</label><input type="text" id="filtroTexto" placeholder="Nombre, equipo..." class="w-full px-3 py-1.5 border rounded outline-none focus:border-blue-500 text-sm"></div>
                         <div><label class="text-xs font-bold text-slate-500 uppercase">Posición</label><select id="filtroPos" class="w-full px-3 py-1.5 border rounded outline-none text-sm"><option value="">Todas</option><option value="POR">POR</option><option value="DFC">DFC</option><option value="LI">LI</option><option value="LD">LD</option><option value="MC">MC</option><option value="MD">MD</option><option value="MI">MI</option><option value="MP">MP</option><option value="ED">ED</option><option value="EI">EI</option><option value="DC">DC</option><option value="DM">DM</option></select></div>
                         <div><label class="text-xs font-bold text-slate-500 uppercase">Recomendación</label><select id="filtroRec" class="w-full px-3 py-1.5 border rounded outline-none text-sm"><option value="">Todas</option><option value="FICHAR">FICHAR</option><option value="RPC">RPC</option><option value="NMA">NMA</option><option value="NCE">NCE</option><option value="SP">SP</option></select></div>
                         <div><label class="text-xs font-bold text-slate-500 uppercase">Año</label><input type="text" id="filtroAno" placeholder="Ej: '04" class="w-full px-3 py-1.5 border rounded outline-none text-sm"></div>
@@ -165,10 +203,10 @@
                     <div class="overflow-x-auto min-h-[400px]">
                         <table class="w-full text-left text-sm whitespace-nowrap">
                             <thead class="bg-white border-b border-slate-200 text-slate-600 uppercase text-xs font-bold">
-                                <tr><th class="px-4 py-3">Rec</th><th class="px-4 py-3">Nombre</th><th class="px-4 py-3">Año</th><th class="px-4 py-3">Pos</th><th class="px-4 py-3">Equipo</th><th class="px-4 py-3 text-center">Pie</th><th class="px-4 py-3 text-center">Nota Media</th></tr>
+                                <tr><th class="px-4 py-3">Rec</th><th class="px-4 py-3">Nombre</th><th class="px-4 py-3">Año</th><th class="px-4 py-3">Pos</th><th class="px-4 py-3">Equipo</th><th class="px-4 py-3 text-center">Pie</th><th class="px-4 py-3 text-center">Nota Media</th><th class="px-4 py-3 text-center">Perfil</th></tr>
                             </thead>
                             <tbody id="cuerpoMatrizGlobal" class="divide-y divide-slate-100">
-                                <tr><td colspan="7" class="px-6 py-10 text-center text-slate-500">Esperando conexión con la Base de Datos...</td></tr>
+                                <tr><td colspan="8" class="px-6 py-10 text-center text-slate-500">Esperando conexión con la Base de Datos...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -180,19 +218,33 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ADMIN: DOSSIERS DE PARTIDO -->
+            <div id="tab-dossiers-global" class="tab-content admin-content">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+                    <h2 class="text-xl font-black mb-6 border-b pb-2">Dossiers de Partido (Todos los Ojeadores)</h2>
+                    <input type="text" id="buscadorDossierAdmin" placeholder="Buscar por equipo u ojeador..." class="w-full px-4 py-2 border rounded outline-none focus:border-blue-500 mb-6 text-sm">
+                    <div id="contenedorDossiersAdmin" class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <!-- Se rellenará por JS -->
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
-    <!-- MODAL ASIGNAR PARTIDO -->
+    <!-- ================= MODALES ================= -->
+    
+    <!-- Modal Asignar Partido (Intacto) -->
     <div id="modalAsignar" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
             <h2 class="text-xl font-bold mb-4 border-b pb-2">Asignar Nuevo Partido</h2>
             <p id="nombreAsignar" class="text-sm text-blue-600 font-bold mb-4"></p>
             <input type="hidden" id="asignarFila">
             <div class="space-y-4 mb-6">
-                <div><label class="block text-xs font-bold mb-1 text-slate-500">PARTIDO</label><input type="text" id="asigPartido" class="w-full px-3 py-2 border rounded text-sm outline-none"></div>
-                <div><label class="block text-xs font-bold mb-1 text-slate-500">EQUIPO A ANALIZAR</label><input type="text" id="asigEquipo" class="w-full px-3 py-2 border rounded text-sm outline-none"></div>
-                <div><label class="block text-xs font-bold mb-1 text-slate-500">LINK DEL VÍDEO</label><input type="text" id="asigLink" class="w-full px-3 py-2 border rounded text-sm outline-none"></div>
+                <div><label class="block text-xs font-bold mb-1">PARTIDO</label><input type="text" id="asigPartido" class="w-full px-3 py-2 border rounded text-sm outline-none"></div>
+                <div><label class="block text-xs font-bold mb-1">EQUIPO A ANALIZAR</label><input type="text" id="asigEquipo" class="w-full px-3 py-2 border rounded text-sm outline-none"></div>
+                <div><label class="block text-xs font-bold mb-1">LINK DEL VÍDEO</label><input type="text" id="asigLink" class="w-full px-3 py-2 border rounded text-sm outline-none"></div>
             </div>
             <div class="flex justify-end gap-3 pt-4 border-t border-slate-100">
                 <button onclick="cerrarModalAsignar()" class="bg-slate-200 px-4 py-2 rounded font-bold text-sm">Cancelar</button>
@@ -201,10 +253,65 @@
         </div>
     </div>
 
+    <!-- Modal PERFIL JUGADOR (Con Cálculo de 4 VALs e Historial) -->
+    <div id="modalPerfilJugador" class="hidden fixed inset-0 bg-slate-900 bg-opacity-80 flex items-center justify-center p-4 z-[60] overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-4xl w-full shadow-2xl overflow-hidden mt-10 mb-10" id="perfilParaExportar">
+            <div class="bg-slate-900 p-6 flex justify-between items-start text-white relative">
+                <button onclick="cerrarPerfil()" data-html2canvas-ignore class="absolute top-4 right-4 text-slate-400 hover:text-white transition text-xl font-bold">✖</button>
+                <div class="flex gap-6 items-center">
+                    <div class="bg-slate-800 border-2 border-slate-700 w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center text-2xl md:text-3xl font-black shadow-inner" id="perfilPos">--</div>
+                    <div>
+                        <h2 id="perfilNombre" class="text-2xl md:text-3xl font-black uppercase tracking-tight">Cargando...</h2>
+                        <p class="text-slate-400 font-medium mt-1 text-sm md:text-base"><span id="perfilEquipo" class="text-emerald-400 font-bold">Equipo</span> | <span id="perfilLiga">Liga</span></p>
+                    </div>
+                </div>
+                <div class="text-center mr-6 md:mr-10">
+                    <p class="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1">Nota Media Histórica</p>
+                    <div id="perfilNotaMedia" class="text-3xl md:text-4xl font-black text-emerald-400">-</div>
+                </div>
+            </div>
+            <div class="bg-slate-50 grid grid-cols-2 md:grid-cols-6 gap-4 p-6 border-b border-slate-200 text-center text-sm">
+                <div><p class="text-slate-400 font-bold text-xs">AÑO</p><p id="perfilAno" class="font-black text-slate-700 mt-1">-</p></div>
+                <div><p class="text-slate-400 font-bold text-xs">2ª POS</p><p id="perfil2Pos" class="font-black text-slate-700 mt-1">-</p></div>
+                <div><p class="text-slate-400 font-bold text-xs">PIE</p><p id="perfilPie" class="font-black text-slate-700 mt-1">-</p></div>
+                <div><p class="text-slate-400 font-bold text-xs">ALTURA</p><p id="perfilAltura" class="font-black text-slate-700 mt-1">-</p></div>
+                <div><p class="text-slate-400 font-bold text-xs">PESO</p><p id="perfilPeso" class="font-black text-slate-700 mt-1">-</p></div>
+                <div><p class="text-slate-400 font-bold text-xs">NAC</p><p id="perfilNac" class="font-black text-slate-700 mt-1">-</p></div>
+            </div>
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4 border-b pb-2">
+                    <h3 class="font-bold text-lg text-slate-800">Historial de Informes (<span id="contadorInformes">0</span>)</h3>
+                    <button onclick="exportarPdf('perfilParaExportar', 'Perfil_Jugador')" data-html2canvas-ignore class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-bold text-sm shadow">📄 Descargar Dossier PDF</button>
+                </div>
+                <div id="contenedorInformes" class="space-y-4 max-h-96 overflow-y-auto pr-2"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal VISOR DE DOSSIER DE PARTIDO -->
+    <div id="modalVisorDossier" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[60] overflow-y-auto">
+        <div class="bg-slate-100 rounded-xl max-w-5xl w-full shadow-2xl overflow-hidden mt-10 mb-10 flex flex-col max-h-[90vh]">
+            <div class="bg-slate-900 p-5 flex justify-between items-center text-white relative">
+                <div>
+                    <h2 id="dossierTitulo" class="text-xl font-black uppercase tracking-tight text-emerald-400">Dossier de Partido</h2>
+                    <p id="dossierSubtitulo" class="text-slate-300 text-sm font-medium mt-1">Ojeador: -</p>
+                </div>
+                <div class="flex gap-4">
+                    <button onclick="cerrarVisorDossier()" class="text-slate-400 hover:text-white transition text-2xl font-bold">✖</button>
+                </div>
+            </div>
+            <div class="p-6 overflow-y-auto flex-1 bg-slate-100">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="cuerpoVisorDossier">
+                    <!-- Tarjetas de jugadores se inyectan aquí -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT -->
     <script>
         // =========================================================================
-        // PEGA TUS ENLACES AQUÍ
+        // ENLACES
         // =========================================================================
         const SCRIPT_URL_USERS = "https://script.google.com/macros/s/AKfycbxNQAdOPguxiqPQWSPuNHAUm3WO1_e5RnYO_PwtsZW03FycnfFbb389TOXzO0JV-7BN/exec";
         const SCRIPT_URL_DB = "https://script.google.com/macros/s/AKfycbwrr3ARTTDAFiSBIKkI1SdoQUQyZbT2K3Wd3yeWB2hAP1q462XlJYTmQxRJenQFM3rhng/exec"; 
@@ -228,14 +335,11 @@
             event.currentTarget.classList.add('active');
         }
 
-        // --- LOGIN ---
+        // ================== LOGIN ==================
         document.getElementById("loginForm").addEventListener("submit", async (e) => {
             e.preventDefault(); document.getElementById("btnLogin").innerText = "Conectando...";
-            const correo = document.getElementById("correo").value;
-            const contrasena = document.getElementById("contrasena").value;
-            
             try {
-                const res = await enviarA_Google({ accion: "login", correo: correo, contrasena: contrasena }, SCRIPT_URL_USERS);
+                const res = await enviarA_Google({ accion: "login", correo: document.getElementById("correo").value, contrasena: document.getElementById("contrasena").value }, SCRIPT_URL_USERS);
                 if(res.exito) {
                     datosUsuario = res; document.getElementById("login-screen").classList.add("hidden");
                     if(res.isAdmin) {
@@ -251,19 +355,16 @@
                         if(res.link && res.link.trim() !== "" && res.link !== "undefined") {
                             btnVid.href = res.link; btnVid.classList.remove("hidden");
                         } else { btnVid.classList.add("hidden"); }
-                        cargarMatrizGlobal(); // Carga silenciada para el autocompletado
+                        cargarMatrizGlobal(); // Carga silenciada para el ojeador
                     }
                 } else { mostrarError("Credenciales incorrectas."); }
             } catch (error) { mostrarError("Error de conexión."); }
         });
-
         function mostrarError(msg) {
-            document.getElementById("loginError").innerText = msg;
-            document.getElementById("loginError").classList.remove("hidden");
-            document.getElementById("btnLogin").innerText = "Acceder al Sistema";
+            document.getElementById("loginError").innerText = msg; document.getElementById("loginError").classList.remove("hidden"); document.getElementById("btnLogin").innerText = "Acceder al Sistema";
         }
 
-        // --- OJEADOR: AUTOCOMPLETADO Y REGISTRO ---
+        // ================== OJEADOR: AUTOCOMPLETADO Y FORMULARIO ==================
         function comprobarJugadorExistente() {
             const nom = document.getElementById('nombre').value.trim().toLowerCase();
             const ape = document.getElementById('apellidos').value.trim().toLowerCase();
@@ -272,7 +373,7 @@
                 const coincidencias = datosMatrizGlobal.filter(f => ((f[2] || "").trim().toLowerCase() + " " + (f[3] || "").trim().toLowerCase()) === fullName);
                 
                 if(coincidencias.length > 0) {
-                    jugadorEncontradoParaAutocomplete = coincidencias[coincidencias.length - 1]; // Cogemos el más reciente
+                    jugadorEncontradoParaAutocomplete = coincidencias[coincidencias.length - 1]; // Más reciente
                     document.getElementById('cajaAutocomplete').classList.remove('hidden');
                 } else {
                     document.getElementById('cajaAutocomplete').classList.add('hidden');
@@ -286,28 +387,15 @@
         function aplicarAutocomplete() {
             if(jugadorEncontradoParaAutocomplete) {
                 const j = jugadorEncontradoParaAutocomplete;
-                document.getElementById('ano').value = j[4] || "";
-                document.getElementById('pos').value = j[5] || "";
-                document.getElementById('pos2').value = j[6] || "";
-                document.getElementById('altura').value = j[7] || "";
-                document.getElementById('peso').value = j[8] || "";
-                document.getElementById('pie').value = j[9] || "";
-                document.getElementById('nacionalidad').value = j[10] || "ESP";
-                document.getElementById('liga').value = j[13] || "";
-                document.getElementById('equipo').value = j[14] || "";
-                document.getElementById('cajaAutocomplete').innerHTML = "<strong>✅ Datos rellenados.</strong>";
+                document.getElementById('ano').value = j[4] || ""; document.getElementById('pos').value = j[5] || ""; document.getElementById('pos2').value = j[6] || ""; document.getElementById('altura').value = j[7] || ""; document.getElementById('peso').value = j[8] || ""; document.getElementById('pie').value = j[9] || ""; document.getElementById('nacionalidad').value = j[10] || "ESP"; document.getElementById('liga').value = j[13] || ""; document.getElementById('equipo').value = j[14] || "";
+                document.getElementById('cajaAutocomplete').innerHTML = "<strong>✅ Datos base rellenados.</strong> Continúa con tu valoración.";
             }
-        }
-
-        function leerBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = error => reject(error); }); }
-
-        async function completarAsignacion() {
-            const btn = document.getElementById("btnCompletarOjeador"); btn.innerText = "Completando..."; btn.disabled = true;
-            try { await enviarA_Google({ accion: "subir_y_completar", fila: datosUsuario.fila, idCarpeta: datosUsuario.idCarpeta || "null" }, SCRIPT_URL_USERS); document.getElementById("cajaAsignacion").innerHTML = "<h3 class='text-emerald-600 font-black text-xl text-center py-6'>✅ Tarea Completada con Éxito</h3>"; } catch(e) { btn.innerText = "Error. Reintentar"; btn.disabled = false; }
         }
 
         document.querySelectorAll('.autocapitalize').forEach(input => { input.addEventListener('input', e => e.target.value = e.target.value.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase())); });
         document.getElementById('ano')?.addEventListener('blur', e => { let val = e.target.value.trim(); if (val.length === 2 && !val.includes("'")) e.target.value = "'" + val; });
+
+        function leerBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = error => reject(error); }); }
 
         document.getElementById("formScouting")?.addEventListener("submit", async (e) => {
             e.preventDefault(); const btn = document.getElementById("btnEnviarRegistro"); btn.innerText = "GUARDANDO..."; btn.disabled = true;
@@ -331,13 +419,17 @@
             try {
                 await enviarA_Google(datosJugador, SCRIPT_URL_DB);
                 document.getElementById('formScouting').reset();
-                document.getElementById('mensajeExitoRegistro').classList.remove('hidden');
-                document.getElementById('cajaAutocomplete').classList.add('hidden');
+                document.getElementById('mensajeExitoRegistro').classList.remove('hidden'); document.getElementById('cajaAutocomplete').classList.add('hidden');
                 setTimeout(() => document.getElementById('mensajeExitoRegistro').classList.add('hidden'), 4000);
-            } catch (error) { alert("Error guardando el jugador."); } finally { btn.innerText = "REGISTRAR JUGADOR EN LA MATRIZ"; btn.disabled = false; }
+            } catch (error) { alert("Error guardando."); } finally { btn.innerText = "REGISTRAR JUGADOR EN LA MATRIZ"; btn.disabled = false; }
         });
 
-        // --- ADMIN: COORDINACIÓN ---
+        async function completarAsignacion() {
+            const btn = document.getElementById("btnCompletarOjeador"); btn.innerText = "Completando..."; btn.disabled = true;
+            try { await enviarA_Google({ accion: "subir_y_completar", fila: datosUsuario.fila, idCarpeta: datosUsuario.idCarpeta || "null" }, SCRIPT_URL_USERS); document.getElementById("cajaAsignacion").innerHTML = "<h3 class='text-emerald-600 font-black text-xl text-center py-6'>✅ Tarea Completada con Éxito</h3>"; } catch(e) { btn.innerText = "Error. Reintentar"; btn.disabled = false; }
+        }
+
+        // ================== ADMIN: COORDINACIÓN ==================
         async function cargarPanelAdmin() {
             const tabla = document.getElementById("tablaAdmin");
             const res = await enviarA_Google({ accion: "cargar_admin" }, SCRIPT_URL_USERS);
@@ -359,53 +451,44 @@
         function cerrarModalAsignar() { document.getElementById("modalAsignar").classList.add("hidden"); }
         async function guardarAsignacion() { const btn = document.getElementById("btnGuardarAsignacion"); btn.innerText = "Enviando..."; btn.disabled = true; await enviarA_Google({ accion: "asignar_tarea", fila: document.getElementById("asignarFila").value, partido: document.getElementById("asigPartido").value, equipo: document.getElementById("asigEquipo").value, link: document.getElementById("asigLink").value }, SCRIPT_URL_USERS); cerrarModalAsignar(); btn.innerText = "Enviar"; btn.disabled = false; cargarPanelAdmin(); }
 
-        // --- ADMIN: BD Y MEDIA TOTAL DE 4 VALS ---
+        // ================== MATRIZ: CARGA Y FILTROS ==================
         async function cargarMatrizGlobal() {
             try {
                 const response = await enviarA_Google({ accion: "cargar_matriz" }, SCRIPT_URL_DB);
-                if(response.exito) { datosMatrizGlobal = response.datos.slice(1); filtrarMatrizGlobal(); }
-            } catch(e) { document.getElementById('cuerpoMatrizGlobal').innerHTML = `<tr><td colspan="7" class="px-6 py-4 text-center text-red-500 font-bold">Error de conexión.</td></tr>`; }
+                if(response.exito) { 
+                    datosMatrizGlobal = response.datos.slice(1); 
+                    filtrarMatrizGlobal(); // Para Admin
+                    if(!datosUsuario.isAdmin) renderizarMisInformes(); // Para Scout
+                    generarDossiersDePartido(); // Genera las carpetas
+                }
+            } catch(e) {}
         }
 
         function filtrarMatrizGlobal() {
-            const txt = (document.getElementById('filtroTexto').value || "").toLowerCase();
-            const pos = document.getElementById('filtroPos').value;
-            const rec = document.getElementById('filtroRec').value;
-            const ano = (document.getElementById('filtroAno').value || "").toLowerCase();
-            const pie = document.getElementById('filtroPie').value;
+            if(!document.getElementById('filtroTexto')) return; // Si no es admin sale
+            const txt = (document.getElementById('filtroTexto').value || "").toLowerCase(); const pos = document.getElementById('filtroPos').value; const rec = document.getElementById('filtroRec').value; const ano = (document.getElementById('filtroAno').value || "").toLowerCase(); const pie = document.getElementById('filtroPie').value;
 
-            // Filtro por columnas corregidas
             const arrFiltrado = datosMatrizGlobal.filter(fila => {
-                if(!fila[2]) return false; // Evita filas sin nombre (col 2)
-                const fTxt = fila.join(" ").toLowerCase().includes(txt);
-                const fPos = pos === "" || fila[5] === pos; // Col 5: POS
-                const fRec = rec === "" || fila[0] === rec; // Col 0: REC
-                const fAno = ano === "" || (fila[4]||"").toLowerCase().includes(ano); // Col 4: AÑO
-                const fPie = pie === "" || fila[9] === pie; // Col 9: PIE
+                if(!fila[2]) return false;
+                const fTxt = fila.join(" ").toLowerCase().includes(txt); const fPos = pos === "" || fila[5] === pos; const fRec = rec === "" || fila[0] === rec; const fAno = ano === "" || (fila[4]||"").toLowerCase().includes(ano); const fPie = pie === "" || fila[9] === pie;
                 return fTxt && fPos && fRec && fAno && fPie;
             });
 
             // Agrupación y cálculo de medias reales (VAL1, VAL2, VAL3, VAL4)
             let jugadoresDic = {};
             arrFiltrado.forEach(fila => {
-                let nomReal = (fila[2] + " " + (fila[3] || "")).trim();
-                let key = nomReal.toLowerCase();
-                
+                let nomReal = (fila[2] + " " + (fila[3] || "")).trim(); let key = nomReal.toLowerCase();
                 if(!jugadoresDic[key]) jugadoresDic[key] = { filaData: fila, sumNotas: 0, countNotas: 0, nomReal: nomReal };
-                else jugadoresDic[key].filaData = fila; // Siempre se queda con el más reciente
+                else jugadoresDic[key].filaData = fila; 
                 
-                // Inspeccionar las 4 columnas de VAL (17, 18, 19, 20)
                 [17, 18, 19, 20].forEach(idx => {
-                    let nStr = (fila[idx]||"").toString().replace(',', '.');
-                    let n = parseFloat(nStr);
+                    let nStr = (fila[idx]||"").toString().replace(',', '.'); let n = parseFloat(nStr);
                     if(!isNaN(n)) { jugadoresDic[key].sumNotas += n; jugadoresDic[key].countNotas++; }
                 });
             });
 
-            // Convertir a Array y Ordenar por la media más alta
             datosFiltradosGlobal = Object.values(jugadoresDic).sort((a,b) => {
-                const mediaA = a.countNotas > 0 ? (a.sumNotas/a.countNotas) : 0;
-                const mediaB = b.countNotas > 0 ? (b.sumNotas/b.countNotas) : 0;
+                const mediaA = a.countNotas > 0 ? (a.sumNotas/a.countNotas) : 0; const mediaB = b.countNotas > 0 ? (b.sumNotas/b.countNotas) : 0;
                 return mediaB - mediaA;
             });
 
@@ -414,18 +497,13 @@
 
         function renderizarTablaPaginada() {
             const cuerpo = document.getElementById('cuerpoMatrizGlobal'); cuerpo.innerHTML = '';
-            const inicio = (currentPage - 1) * itemsPerPage; const fin = inicio + itemsPerPage;
-            const items = datosFiltradosGlobal.slice(inicio, fin);
+            const inicio = (currentPage - 1) * itemsPerPage; const fin = inicio + itemsPerPage; const items = datosFiltradosGlobal.slice(inicio, fin);
 
-            if(items.length === 0) cuerpo.innerHTML = `<tr><td colspan="7" class="px-6 py-10 text-center text-slate-500">No hay resultados.</td></tr>`;
+            if(items.length === 0) cuerpo.innerHTML = `<tr><td colspan="8" class="px-6 py-10 text-center text-slate-500">No hay resultados.</td></tr>`;
             else {
                 items.forEach(obj => {
-                    let fila = obj.filaData;
-                    let colorRec = "bg-slate-200 text-slate-700";
-                    if(fila[0] === "FICHAR") colorRec = "bg-emerald-100 text-emerald-800";
-                    if(fila[0] === "RPC") colorRec = "bg-blue-100 text-blue-800";
-                    if(fila[0] === "NCE") colorRec = "bg-red-100 text-red-800";
-                    
+                    let fila = obj.filaData; let colorRec = "bg-slate-200 text-slate-700";
+                    if(fila[0] === "FICHAR") colorRec = "bg-emerald-100 text-emerald-800"; if(fila[0] === "RPC") colorRec = "bg-blue-100 text-blue-800"; if(fila[0] === "NCE") colorRec = "bg-red-100 text-red-800";
                     let mediaText = obj.countNotas > 0 ? (obj.sumNotas / obj.countNotas).toFixed(2) : "-";
 
                     cuerpo.innerHTML += `
@@ -437,6 +515,7 @@
                             <td class="px-4 py-3 text-xs text-slate-600 truncate max-w-[150px]">${fila[14] || '-'}</td>
                             <td class="px-4 py-3 text-slate-700 text-center">${fila[9] || '-'}</td>
                             <td class="px-4 py-3 text-center font-black text-emerald-600">${mediaText}</td>
+                            <td class="px-4 py-3 text-center"><button onclick="abrirPerfil('${obj.nomReal.replace(/'/g, "\\'")}')" class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1 rounded font-bold">Ver Perfil</button></td>
                         </tr>`;
                 });
             }
@@ -444,18 +523,193 @@
         }
 
         function actualizarBotonesPaginacion() {
-            const totalPages = Math.ceil(datosFiltradosGlobal.length / itemsPerPage) || 1;
-            document.getElementById("txtInfoPaginacion").innerText = `Página ${currentPage} de ${totalPages} (${datosFiltradosGlobal.length} jug)`;
-            document.getElementById("btnPrevPage").disabled = currentPage === 1;
-            document.getElementById("btnNextPage").disabled = currentPage === totalPages;
+            const totalPages = Math.ceil(datosFiltradosGlobal.length / itemsPerPage) || 1; document.getElementById("txtInfoPaginacion").innerText = `Página ${currentPage} de ${totalPages} (${datosFiltradosGlobal.length} jug)`; document.getElementById("btnPrevPage").disabled = currentPage === 1; document.getElementById("btnNextPage").disabled = currentPage === totalPages;
+        }
+        function cambiarPagina(delta) {
+            const totalPages = Math.ceil(datosFiltradosGlobal.length / itemsPerPage) || 1; currentPage += delta; if(currentPage < 1) currentPage = 1; if(currentPage > totalPages) currentPage = totalPages; renderizarTablaPaginada();
         }
 
-        function cambiarPagina(delta) {
-            const totalPages = Math.ceil(datosFiltradosGlobal.length / itemsPerPage) || 1;
-            currentPage += delta;
-            if(currentPage < 1) currentPage = 1; if(currentPage > totalPages) currentPage = totalPages;
-            renderizarTablaPaginada();
+        // ================== MIS INFORMES (SCOUT) ==================
+        function renderizarMisInformes() {
+            const tbody = document.getElementById('cuerpoMisInformes'); if(!tbody) return; tbody.innerHTML = '';
+            const txt = (document.getElementById('filtroTextoScout')?.value || "").toLowerCase();
+            
+            const misDatos = datosMatrizGlobal.filter(f => f[24] === datosUsuario.nombre && f.join(" ").toLowerCase().includes(txt));
+            
+            // Agrupamos para enseñar el último
+            let unicos = {};
+            misDatos.forEach(f => { if(f[2]) unicos[(f[2]+" "+(f[3]||"")).trim().toLowerCase()] = f; });
+            
+            Object.values(unicos).forEach(fila => {
+                let nomReal = (fila[2]+" "+(fila[3]||"")).trim();
+                let colorRec = "bg-slate-200 text-slate-700"; if(fila[0] === "FICHAR") colorRec = "bg-emerald-100 text-emerald-800"; if(fila[0] === "NCE") colorRec = "bg-red-100 text-red-800";
+                
+                tbody.innerHTML += `<tr class="border-b hover:bg-slate-50"><td class="px-4 py-2 font-bold text-[10px]"><span class="px-2 py-1 rounded uppercase ${colorRec}">${fila[0]||'-'}</span></td><td class="px-4 py-2 font-bold">${nomReal}</td><td class="px-4 py-2 font-bold text-sm">${fila[5]}</td><td class="px-4 py-2 font-black text-center">${fila[17]||'-'}</td><td class="px-4 py-2 text-center"><button onclick="abrirPerfil('${nomReal.replace(/'/g, "\\'")}')" class="text-xs bg-slate-800 text-white px-3 py-1 rounded font-bold">Ver Perfil</button></td></tr>`;
+            });
         }
+        document.getElementById('filtroTextoScout')?.addEventListener('input', renderizarMisInformes);
+
+        // ================== PERFIL DE JUGADOR (CON HISTORIAL) ==================
+        function abrirPerfil(nombreCompletoBuscado) {
+            const keyBuscada = nombreCompletoBuscado.trim().toLowerCase();
+            const informesJugador = datosMatrizGlobal.filter(fila => {
+                if(!fila[2]) return false;
+                return (fila[2] + " " + (fila[3]||"")).trim().toLowerCase() === keyBuscada;
+            });
+            if(informesJugador.length === 0) return;
+
+            const base = informesJugador[informesJugador.length - 1]; // Datos más recientes
+            document.getElementById("perfilNombre").innerText = nombreCompletoBuscado; document.getElementById("perfilPos").innerText = base[5] || "-"; document.getElementById("perfilEquipo").innerText = base[14] || "-"; document.getElementById("perfilLiga").innerText = base[13] || "-"; document.getElementById("perfilAno").innerText = base[4] || "-"; document.getElementById("perfil2Pos").innerText = base[6] || "-"; document.getElementById("perfilPie").innerText = base[9] || "-"; document.getElementById("perfilAltura").innerText = base[7] ? base[7] + " cm" : "-"; document.getElementById("perfilPeso").innerText = base[8] ? base[8] + " kg" : "-"; document.getElementById("perfilNac").innerText = base[10] || "-";
+
+            let sumaNotas = 0, contador = 0; const cajaInformes = document.getElementById("contenedorInformes"); cajaInformes.innerHTML = "";
+            document.getElementById("contadorInformes").innerText = informesJugador.length;
+
+            informesJugador.forEach(inf => {
+                // Sacar notas de las 4 columnas de este informe (si estuvieran rellenas en el pasado)
+                [17, 18, 19, 20].forEach(idx => {
+                    const n = parseFloat((inf[idx]||"").toString().replace(',','.'));
+                    if(!isNaN(n)) { sumaNotas += n; contador++; }
+                });
+
+                let bgRec = "bg-slate-200 text-slate-700"; if(inf[0]==="FICHAR") bgRec="bg-emerald-100 text-emerald-800";
+                let linkPdf = (inf[23] && inf[23].includes('http')) ? `<a href="${inf[23]}" target="_blank" class="text-blue-600 underline text-xs font-bold ml-2">📄 Ver PDF</a>` : '';
+                let linkVid = (inf[22] && inf[22].includes('http')) ? `<a href="${inf[22]}" target="_blank" class="text-blue-600 underline text-xs font-bold ml-2">📺 Ver Vídeo</a>` : '';
+
+                cajaInformes.innerHTML += `
+                    <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm mb-3">
+                        <div class="flex justify-between items-start mb-2">
+                            <div><p class="text-xs font-bold text-slate-400 uppercase">Autor: <span class="text-blue-600">${inf[24] || 'Scout'}</span></p>
+                            <span class="px-2 py-1 rounded text-[10px] font-black uppercase ${bgRec}">${inf[0]||'-'}</span>
+                            <span class="px-2 py-1 rounded text-[10px] bg-slate-100 font-bold ml-1">${inf[16]||'-'}</span>
+                            ${linkPdf} ${linkVid}</div>
+                            <div class="bg-slate-900 text-emerald-400 font-black text-xl px-3 py-1 rounded border border-slate-700">${inf[17]||'-'}</div>
+                        </div>
+                        <p class="text-sm font-bold text-slate-700 mb-1">ATRIBUTOS: <span class="font-normal text-slate-600">${inf[11]||'-'}</span></p>
+                        <p class="text-sm text-slate-600 bg-slate-50 p-3 rounded italic">"${inf[12]||'-'}"</p>
+                    </div>`;
+            });
+            document.getElementById("perfilNotaMedia").innerText = contador > 0 ? (sumaNotas/contador).toFixed(2) : "-";
+            document.getElementById("modalPerfilJugador").classList.remove("hidden");
+        }
+        function cerrarPerfil() { document.getElementById("modalPerfilJugador").classList.add("hidden"); }
+
+        // ================== NUEVO: DOSSIERS DE PARTIDO ==================
+        let agrupacionDossiers = {};
+
+        function generarDossiersDePartido() {
+            agrupacionDossiers = {};
+            
+            // Recorremos la matriz para agrupar por "Ojeador + Equipo Evaluado"
+            datosMatrizGlobal.forEach(fila => {
+                if(!fila[2]) return; // Si no hay nombre, saltamos
+                const ojeador = fila[24] || "Desconocido";
+                const equipo = fila[14] || "Sin Equipo";
+                // Usamos una clave combinada
+                const key = `${ojeador}_${equipo}`;
+                
+                if(!agrupacionDossiers[key]) {
+                    agrupacionDossiers[key] = {
+                        ojeador: ojeador,
+                        equipo: equipo,
+                        fechaReciente: fila[16] || "-",
+                        jugadores: []
+                    };
+                }
+                agrupacionDossiers[key].jugadores.push(fila);
+            });
+
+            renderizarTarjetasDossier();
+        }
+
+        function renderizarTarjetasDossier() {
+            const isAdmin = datosUsuario.isAdmin;
+            const container = document.getElementById(isAdmin ? 'contenedorDossiersAdmin' : 'contenedorDossiersScout');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            let query = "";
+            if(isAdmin) {
+                const searchInput = document.getElementById('buscadorDossierAdmin');
+                if(searchInput) {
+                    query = searchInput.value.toLowerCase();
+                    searchInput.addEventListener('input', renderizarTarjetasDossier);
+                }
+            }
+
+            Object.values(agrupacionDossiers).forEach(dossier => {
+                // Si es ojeador, solo ve los suyos
+                if(!isAdmin && dossier.ojeador !== datosUsuario.nombre) return;
+                // Si es admin y busca, filtramos
+                if(isAdmin && query && !dossier.equipo.toLowerCase().includes(query) && !dossier.ojeador.toLowerCase().includes(query)) return;
+
+                // Contar total de jugadores en este dossier (únicos)
+                let unicos = new Set();
+                dossier.jugadores.forEach(j => unicos.add((j[2]+" "+(j[3]||"")).trim()));
+
+                const keySegura = `${dossier.ojeador}_${dossier.equipo}`.replace(/'/g, "\\'");
+
+                container.innerHTML += `
+                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition relative">
+                        <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500 rounded-l-xl"></div>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">📝 ${dossier.ojeador}</p>
+                        <h3 class="text-lg font-black text-slate-800 leading-tight">${dossier.equipo}</h3>
+                        <div class="mt-4 flex justify-between items-end">
+                            <div>
+                                <span class="bg-slate-100 text-slate-600 font-bold px-2 py-1 rounded text-xs">👥 ${unicos.size} Jugadores</span>
+                            </div>
+                            <button onclick="abrirVisorDossier('${keySegura}')" class="bg-slate-900 text-white font-bold text-xs px-3 py-1.5 rounded shadow">Ver Dossier</button>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        function abrirVisorDossier(key) {
+            const dossier = agrupacionDossiers[key];
+            if(!dossier) return;
+
+            document.getElementById('dossierTitulo').innerText = `Dossier: ${dossier.equipo}`;
+            document.getElementById('dossierSubtitulo').innerText = `Scout: ${dossier.ojeador} | Evaluaciones: ${dossier.jugadores.length}`;
+            
+            const cuerpo = document.getElementById('cuerpoVisorDossier');
+            cuerpo.innerHTML = '';
+
+            // Renderizamos los jugadores de este dossier como tarjetas
+            dossier.jugadores.forEach(inf => {
+                let nomComp = (inf[2] + " " + (inf[3] || "")).trim();
+                let bgRec = "bg-slate-200 text-slate-700"; if(inf[0]==="FICHAR") bgRec="bg-emerald-100 text-emerald-800";
+                
+                cuerpo.innerHTML += `
+                    <div class="bg-white border border-slate-200 rounded-lg p-4 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="px-2 py-1 rounded text-[10px] font-black uppercase ${bgRec}">${inf[0]||'-'}</span>
+                                <div class="bg-slate-900 text-emerald-400 font-black text-lg px-2 py-1 rounded">${inf[17]||'-'}</div>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-lg leading-tight mb-1">${nomComp}</h4>
+                            <p class="text-xs font-bold text-slate-400 mb-2">${inf[5] || 'POS'} | ${inf[4] || 'AÑO'} | Pie: ${inf[9] || '-'}</p>
+                            <p class="text-sm font-bold text-slate-700 mb-1 line-clamp-1">ATR: <span class="font-normal text-slate-600">${inf[11]||'-'}</span></p>
+                            <p class="text-xs text-slate-600 bg-slate-50 p-2 rounded italic line-clamp-3">"${inf[12]||'-'}"</p>
+                        </div>
+                        <button onclick="abrirPerfil('${nomComp.replace(/'/g, "\\'")}')" class="mt-4 w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2 rounded text-xs transition">Abrir Perfil Completo</button>
+                    </div>`;
+            });
+
+            document.getElementById('modalVisorDossier').classList.remove('hidden');
+        }
+        function cerrarVisorDossier() { document.getElementById('modalVisorDossier').classList.add('hidden'); }
+
+        // ================== PDF EXPORT ==================
+        async function exportarPdf(idElemento, nombreArchivo) {
+            const btn = event.currentTarget; const textoOriginal = btn.innerText; btn.innerText = "Calculando PDF..."; btn.disabled = true;
+            try {
+                const elemento = document.getElementById(idElemento);
+                const canvas = await html2canvas(elemento, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+                const imgData = canvas.toDataURL('image/jpeg', 1.0); const { jsPDF } = window.jspdf; const pdf = new jsPDF('p', 'mm', 'a4');
+                const margin = 10; const pdfWidth = pdf.internal.pageSize.getWidth() - (margin * 2); const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                pdf.addImage(imgData, 'JPEG', margin, margin, pdfWidth, pdfHeight); pdf.save(`${nombreArchivo}.pdf`);
+            } catch(e) { alert("Error al exportar."); } finally { btn.innerText = textoOriginal; btn.disabled = false; }
+        }
+
     </script>
 </body>
 </html>
