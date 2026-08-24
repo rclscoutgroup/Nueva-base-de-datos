@@ -18,11 +18,10 @@
         .tab-content.active { display: block; }
         .tab-btn.active { border-bottom: 4px solid #10b981; color: #10b981; font-weight: 900; }
 
-        /* PITCH SCOUTDECISIÓN STYLE (ARREGLADO PARA HTML2CANVAS) */
+        /* PITCH SCOUTDECISIÓN STYLE */
         .sd-pitch { background-color: #15b358; position: relative; border: 4px solid white; border-radius: 8px; width: 100%; height: 750px; margin-top: 10px; display: flex; flex-direction: column; justify-content: space-evenly; padding: 20px 0; }
         .sd-lines { position: absolute; inset: 16px; border: 2px solid rgba(255,255,255,0.8); pointer-events: none; z-index: 0; }
         
-        /* Uso de margin: auto para el centro (Soluciona el bug de exportación PDF) */
         .sd-center-line { position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.8); margin-top: -1px; pointer-events: none; z-index: 0; }
         .sd-center-circle { position: absolute; top: 0; bottom: 0; left: 0; right: 0; margin: auto; width: 140px; height: 140px; border: 2px solid rgba(255,255,255,0.8); border-radius: 50%; pointer-events: none; z-index: 0; }
         .sd-box-top { position: absolute; top: 16px; left: 0; right: 0; margin: 0 auto; width: 300px; height: 100px; border: 2px solid rgba(255,255,255,0.8); border-top: none; pointer-events: none; z-index: 0; }
@@ -31,29 +30,26 @@
         .sd-row { display: flex; justify-content: space-around; align-items: flex-end; width: 100%; z-index: 10; position: relative; }
         
         /* Slot de Posición */
-        .sd-slot { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 120px; min-height: 100px; position: relative; transition: all 0.2s; padding-bottom: 30px; }
+        .sd-slot { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 150px; min-height: 100px; position: relative; transition: all 0.2s; padding-bottom: 30px; }
         .sd-slot.drag-over { background: rgba(255, 255, 255, 0.2); border-radius: 8px; }
         
-        /* El punto blanco que marca la posición en el campo (Fijo para PDF) */
+        /* El punto blanco que marca la posición en el campo */
         .sd-dot { width: 20px; height: 20px; background: white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); position: absolute; bottom: 0; left: 0; right: 0; margin: 0 auto; }
         .sd-pos-label { position: absolute; bottom: -22px; width: 100%; text-align: center; font-size: 0.7rem; font-weight: 900; color: rgba(255,255,255,0.9); text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
 
-        /* Contenedor de las tarjetas apilables */
         .sd-cards-container { display: flex; flex-direction: column; gap: 4px; width: 100%; align-items: center; min-height: 40px; }
         
-        /* Tarjeta de Jugador en el Campo */
-        .sd-card { width: 130px; border-radius: 6px; padding: 4px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: grab; position: relative; transition: transform 0.1s; }
+        /* Tarjeta de Jugador en el Campo (Ajustada para que no corte los nombres) */
+        .sd-card { width: 145px; border-radius: 6px; padding: 4px; color: white; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.3); cursor: grab; position: relative; transition: transform 0.1s; }
         .sd-card:active { cursor: grabbing; transform: scale(1.05); }
         .sd-card.dragging { opacity: 0.5; }
-        .sd-card .c-name { font-weight: 900; font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 1px 1px 1px rgba(0,0,0,0.4); }
-        .sd-card .c-info { font-size: 0.6rem; opacity: 0.9; text-shadow: 1px 1px 1px rgba(0,0,0,0.4); line-height: 1.1; }
+        .sd-card .c-name { font-weight: 900; font-size: 0.75rem; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-height: 1.1; margin-bottom: 2px; text-shadow: 1px 1px 1px rgba(0,0,0,0.4); }
+        .sd-card .c-info { font-size: 0.65rem; opacity: 0.9; text-shadow: 1px 1px 1px rgba(0,0,0,0.4); line-height: 1.1; }
 
-        /* Elementos Ocultos en Tarjeta (Botón borrar y Selector color) */
-        .sd-card-controls { display: none; position: absolute; top: -10px; right: -10px; flex-direction: column; gap: 2px; }
+        .sd-card-controls { display: none; position: absolute; top: -10px; right: -10px; flex-direction: column; gap: 2px; z-index: 20; }
         .sd-card:hover .sd-card-controls { display: flex; }
         .sd-btn-del { background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: bold; border: 1px solid white; cursor: pointer; }
 
-        /* Tarjeta Arrastrable del Buscador */
         .ficha-drag { background: #1e293b; color: white; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; cursor: grab; margin-bottom: 8px; border-left: 4px solid #3b82f6; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .ficha-drag:active { cursor: grabbing; }
     </style>
@@ -108,7 +104,7 @@
                         </div>
                     </div>
 
-                    <div class="lg:col-span-8 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                    <div class="lg:col-span-8 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col">
                         <div class="bg-blue-900 text-white p-4 flex justify-between items-center rounded-t-xl"><h2 class="font-bold text-lg">REGISTRO DE NUEVO JUGADOR</h2></div>
                         <div class="p-6 md:p-8">
                             <form id="formScouting" class="space-y-6">
@@ -198,14 +194,14 @@
 
             <!-- TAB OJEADOR: SHADOW TEAM -->
             <div id="tab-campo-scout" class="tab-content scout-content">
-                <div class="flex flex-col md:flex-row gap-6 items-start h-auto md:h-[850px]">
-                    <div class="w-full md:w-1/4 bg-white rounded-xl shadow-sm border border-slate-200 p-4 h-full flex flex-col">
+                <div class="flex flex-col md:flex-row gap-6 items-start h-auto">
+                    <div class="w-full md:w-1/4 bg-white rounded-xl shadow-sm border border-slate-200 p-4 h-[850px] flex flex-col">
                         <h3 class="font-black text-sm uppercase text-slate-500 mb-2 border-b pb-2">Mis Jugadores</h3>
                         <input type="text" id="buscadorDragScout" placeholder="Buscar..." class="w-full px-3 py-2 border rounded text-sm mb-3 outline-none">
                         <div id="listaDragScout" class="flex-1 overflow-y-auto pr-1"></div>
                     </div>
                     
-                    <div class="w-full md:w-3/4 bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full flex flex-col relative" id="contenedorPdfScout">
+                    <div class="w-full md:w-3/4 bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col relative" id="contenedorPdfScout">
                         <div class="flex justify-between items-center mb-4 z-10 bg-white border-b pb-4">
                             <div class="flex gap-4 items-center">
                                 <h2 class="text-xl font-black text-slate-800">Mi Shadow Team</h2>
@@ -213,12 +209,13 @@
                                     <option value="4-4-2">4-4-2</option><option value="4-2-3-1" selected>4-2-3-1</option><option value="4-3-3">4-3-3</option><option value="3-5-2">3-5-2</option><option value="3-4-3">3-4-3</option><option value="5-3-2">5-3-2</option><option value="4-1-4-1">4-1-4-1</option>
                                 </select>
                             </div>
-                            <button onclick="exportarShadowTeam('contenedorPdfScout', 'Mi_Shadow_Team')" data-html2canvas-ignore class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded font-bold text-sm shadow transition">📄 Exportar Dossier PDF</button>
+                            <button onclick="exportarShadowTeam('zonaExportarCampogramaScout', 'Mi_Shadow_Team', 'scout')" data-html2canvas-ignore class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded font-bold text-sm shadow transition">📄 Exportar Dossier PDF</button>
                         </div>
                         
-                        <div id="zonaExportarCampogramaScout" class="flex flex-col gap-6 flex-1 overflow-y-auto pb-10">
+                        <!-- ZONA A EXPORTAR -->
+                        <div id="zonaExportarCampogramaScout" class="flex flex-col gap-6 flex-1 overflow-y-auto pb-10 relative">
                             
-                            <!-- HEADER PDF (Hidden by default) -->
+                            <!-- HEADER PDF (Hidden by default, shown during export) -->
                             <div id="pdf-header-scout" class="hidden mb-2 pb-4 border-b-2 border-slate-200 justify-between items-center" data-html2canvas-ignore="false">
                                 <div class="flex items-center gap-4">
                                     <img src="https://santapolacf.es/images/ESCUDO3.png" class="h-16" crossorigin="anonymous">
@@ -229,13 +226,13 @@
                                 </div>
                                 <div class="text-right">
                                     <p class="text-sm font-bold text-slate-700">Autor: <span id="pdf-ojeador-name-scout" class="text-blue-600">...</span></p>
-                                    <p class="text-xs text-slate-500 mt-1">Fecha: <span id="pdf-date-scout">...</span></p>
+                                    <p class="text-xs text-slate-500 mt-1">Fecha de Creación: <span id="pdf-date-scout">...</span></p>
                                 </div>
                             </div>
 
                             <!-- Leyenda -->
                             <div class="bg-slate-50 p-3 rounded border border-slate-200 flex flex-wrap gap-4 items-center text-sm">
-                                <span class="font-bold text-slate-700">Leyenda de Color:</span>
+                                <span class="font-bold text-slate-700">Leyenda:</span>
                                 <div id="legend-list-scout" class="flex flex-wrap gap-2 items-center"></div>
                                 <div data-html2canvas-ignore class="flex gap-1 ml-auto border-l pl-4 border-slate-300">
                                     <input type="color" id="newColor-scout" value="#ef4444" class="w-6 h-6 rounded cursor-pointer border-0 p-0">
@@ -338,14 +335,14 @@
 
             <!-- ADMIN: SHADOW TEAM -->
             <div id="tab-campo-global" class="tab-content admin-content">
-                <div class="flex flex-col md:flex-row gap-6 items-start h-auto md:h-[850px]">
-                    <div class="w-full md:w-1/4 bg-white rounded-xl shadow-sm border border-slate-200 p-4 h-full flex flex-col">
+                <div class="flex flex-col md:flex-row gap-6 items-start h-auto">
+                    <div class="w-full md:w-1/4 bg-white rounded-xl shadow-sm border border-slate-200 p-4 h-[850px] flex flex-col">
                         <h3 class="font-black text-sm uppercase text-slate-500 mb-2 border-b pb-2">Matriz Global</h3>
                         <input type="text" id="buscadorDragAdmin" placeholder="Buscar jugador..." class="w-full px-3 py-2 border rounded text-sm mb-3 outline-none">
                         <div id="listaDragAdmin" class="flex-1 overflow-y-auto pr-1"></div>
                     </div>
                     
-                    <div class="w-full md:w-3/4 bg-white rounded-xl shadow-sm border border-slate-200 p-6 h-full flex flex-col relative" id="contenedorPdfAdmin">
+                    <div class="w-full md:w-3/4 bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col relative" id="contenedorPdfAdmin">
                         <div class="flex justify-between items-center mb-4 z-10 bg-white border-b pb-4">
                             <div class="flex gap-4 items-center">
                                 <h2 class="text-xl font-black text-slate-800">Shadow Team Global</h2>
@@ -353,10 +350,11 @@
                                     <option value="4-4-2">4-4-2</option><option value="4-2-3-1" selected>4-2-3-1</option><option value="4-3-3">4-3-3</option><option value="3-5-2">3-5-2</option><option value="3-4-3">3-4-3</option><option value="5-3-2">5-3-2</option><option value="4-1-4-1">4-1-4-1</option>
                                 </select>
                             </div>
-                            <button onclick="exportarShadowTeam('contenedorPdfAdmin', 'Shadow_Team_Global')" data-html2canvas-ignore class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded font-bold text-sm shadow transition">📄 Exportar Dossier PDF</button>
+                            <button onclick="exportarShadowTeam('zonaExportarCampogramaAdmin', 'Shadow_Team_Global', 'admin')" data-html2canvas-ignore class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded font-bold text-sm shadow transition">📄 Exportar Dossier PDF</button>
                         </div>
                         
-                        <div id="zonaExportarCampogramaAdmin" class="flex flex-col gap-6 flex-1 overflow-y-auto pb-10">
+                        <!-- ZONA A EXPORTAR -->
+                        <div id="zonaExportarCampogramaAdmin" class="flex flex-col gap-6 flex-1 overflow-y-auto pb-10 relative">
                             
                             <!-- HEADER PDF (Hidden by default) -->
                             <div id="pdf-header-admin" class="hidden mb-2 pb-4 border-b-2 border-slate-200 justify-between items-center" data-html2canvas-ignore="false">
@@ -368,8 +366,8 @@
                                     </div>
                                 </div>
                                 <div class="text-right">
-                                    <p class="text-sm font-bold text-slate-700">Dirección Deportiva</p>
-                                    <p class="text-xs text-slate-500 mt-1">Fecha: <span id="pdf-date-admin">...</span></p>
+                                    <p class="text-sm font-bold text-slate-700">Autor: <span id="pdf-ojeador-name-admin" class="text-blue-600">Dirección Deportiva</span></p>
+                                    <p class="text-xs text-slate-500 mt-1">Fecha de Creación: <span id="pdf-date-admin">...</span></p>
                                 </div>
                             </div>
 
@@ -617,7 +615,7 @@
         async function exportarPdf(id, nom) { const b = event.currentTarget; const tx = b.innerText; b.innerText = "Calculando..."; b.disabled = true; try { const el = document.getElementById(id); const cv = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff" }); const im = cv.toDataURL('image/jpeg', 1.0); const { jsPDF } = window.jspdf; const pf = new jsPDF('p', 'mm', 'a4'); const m = 10; const w = pf.internal.pageSize.getWidth() - (m*2); const h = (cv.height * w) / cv.width; pf.addImage(im, 'JPEG', m, m, w, h); pf.save(`${nom}.pdf`); } catch(e){} finally { b.innerText = tx; b.disabled = false; } }
 
         // =======================================================================================
-        // FASE 3: CAMPOGRAMAS (HTML2CANVAS BUGFIX + CABECERA)
+        // FASE 3: CAMPOGRAMAS (BUGFIX EXPORTACIÓN Y CABECERA)
         // =======================================================================================
         
         let customLegends = {
@@ -721,37 +719,51 @@
                     hList += `</ul></div>`; dom.innerHTML += hList;
                 }
             });
+            const contenedorPrincipal = document.getElementById(prefijo === 'admin' ? 'listadoPlantillaAdmin' : 'listadoPlantillaScout');
+            if(hay) contenedorPrincipal.classList.remove('hidden'); else contenedorPrincipal.classList.add('hidden');
         }
 
-        // --- EXPORTACIÓN PERFECTA CON CABECERA ---
-        async function exportarShadowTeam(idContenedor, nombreArchivo) {
+        // ================== EXPORTACIÓN A PDF FORZADA Y MILIMÉTRICA ==================
+        async function exportarShadowTeam(idContenedor, nombreArchivo, prefijo) {
             const btn = event.currentTarget; const textoOriginal = btn.innerText; btn.innerText = "Calculando PDF..."; btn.disabled = true;
             try {
-                const zonaPdf = document.getElementById(idContenedor).querySelector('.flex-col.gap-6') || document.getElementById(idContenedor).querySelector('.flex-col.gap-8'); 
+                window.scrollTo(0,0); // Eliminar offset de scroll para html2canvas
+                const zonaPdf = document.getElementById(idContenedor); 
                 
-                const prefijo = idContenedor.includes('Scout') ? 'scout' : 'admin';
                 const headerPdf = document.getElementById(`pdf-header-${prefijo}`);
                 if(headerPdf) {
                     if(document.getElementById(`pdf-ojeador-name-${prefijo}`)) { document.getElementById(`pdf-ojeador-name-${prefijo}`).innerText = datosUsuario.nombre || "Scout"; }
-                    if(document.getElementById(`pdf-date-${prefijo}`)) { document.getElementById(`pdf-date-${prefijo}`).innerText = new Date().toLocaleDateString(); }
+                    if(document.getElementById(`pdf-date-${prefijo}`)) { 
+                        const opciones = { day: '2-digit', month: 'short', year: 'numeric' };
+                        document.getElementById(`pdf-date-${prefijo}`).innerText = new Date().toLocaleDateString('es-ES', opciones); 
+                    }
                     headerPdf.classList.remove('hidden'); headerPdf.classList.add('flex');
                 }
 
+                // Forzar un canvas perfecto (Ancho fijo, alto dinámico, sin scrolls que corten)
+                const originalStyle = zonaPdf.getAttribute('style') || '';
                 zonaPdf.style.backgroundColor = "#ffffff";
                 zonaPdf.style.padding = "20px";
-                
-                await new Promise(r => setTimeout(r, 200));
+                zonaPdf.style.width = "1200px";
+                zonaPdf.style.height = "auto";
+                zonaPdf.style.overflow = "visible";
+                zonaPdf.style.position = "relative";
 
-                const canvas = await html2canvas(zonaPdf, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
+                // Dar tiempo al navegador a redibujar
+                await new Promise(r => setTimeout(r, 300)); 
+
+                const canvas = await html2canvas(zonaPdf, { scale: 2, useCORS: true, backgroundColor: "#ffffff", windowWidth: 1200, scrollY: 0, scrollX: 0 });
                 
+                // Restaurar web a su estado original
                 if(headerPdf) { headerPdf.classList.add('hidden'); headerPdf.classList.remove('flex'); }
-                zonaPdf.style.padding = ""; zonaPdf.style.backgroundColor = "";
+                zonaPdf.setAttribute('style', originalStyle);
 
                 const imgData = canvas.toDataURL('image/jpeg', 1.0); const { jsPDF } = window.jspdf; const pdf = new jsPDF('p', 'mm', 'a4');
                 const margin = 10; const pdfWidth = pdf.internal.pageSize.getWidth() - (margin * 2); const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
                 pdf.addImage(imgData, 'JPEG', margin, margin, pdfWidth, pdfHeight); pdf.save(`${nombreArchivo}.pdf`);
-            } catch(e) { alert("Error al exportar."); } finally { btn.innerText = textoOriginal; btn.disabled = false; }
+            } catch(e) { alert("Error al exportar. Comprueba tu conexión."); } finally { btn.innerText = textoOriginal; btn.disabled = false; }
         }
+
     </script>
 </body>
 </html>
