@@ -18,13 +18,15 @@
         .tab-content.active { display: block; }
         .tab-btn.active { border-bottom: 4px solid #10b981; color: #10b981; font-weight: 900; }
 
-        /* PITCH SCOUTDECISIÓN STYLE */
+        /* PITCH SCOUTDECISIÓN STYLE (ARREGLADO PARA HTML2CANVAS) */
         .sd-pitch { background-color: #15b358; position: relative; border: 4px solid white; border-radius: 8px; width: 100%; height: 750px; margin-top: 10px; display: flex; flex-direction: column; justify-content: space-evenly; padding: 20px 0; }
         .sd-lines { position: absolute; inset: 16px; border: 2px solid rgba(255,255,255,0.8); pointer-events: none; z-index: 0; }
-        .sd-center-line { position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.8); transform: translateY(-50%); pointer-events: none; z-index: 0; }
-        .sd-center-circle { position: absolute; top: 50%; left: 50%; width: 140px; height: 140px; border: 2px solid rgba(255,255,255,0.8); border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; z-index: 0; }
-        .sd-box-top { position: absolute; top: 16px; left: 50%; transform: translateX(-50%); width: 300px; height: 100px; border: 2px solid rgba(255,255,255,0.8); border-top: none; pointer-events: none; z-index: 0; }
-        .sd-box-bottom { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); width: 300px; height: 100px; border: 2px solid rgba(255,255,255,0.8); border-bottom: none; pointer-events: none; z-index: 0; }
+        
+        /* Uso de margin: auto para el centro (Soluciona el bug de exportación PDF) */
+        .sd-center-line { position: absolute; top: 50%; left: 0; right: 0; height: 2px; background: rgba(255,255,255,0.8); margin-top: -1px; pointer-events: none; z-index: 0; }
+        .sd-center-circle { position: absolute; top: 0; bottom: 0; left: 0; right: 0; margin: auto; width: 140px; height: 140px; border: 2px solid rgba(255,255,255,0.8); border-radius: 50%; pointer-events: none; z-index: 0; }
+        .sd-box-top { position: absolute; top: 16px; left: 0; right: 0; margin: 0 auto; width: 300px; height: 100px; border: 2px solid rgba(255,255,255,0.8); border-top: none; pointer-events: none; z-index: 0; }
+        .sd-box-bottom { position: absolute; bottom: 16px; left: 0; right: 0; margin: 0 auto; width: 300px; height: 100px; border: 2px solid rgba(255,255,255,0.8); border-bottom: none; pointer-events: none; z-index: 0; }
 
         .sd-row { display: flex; justify-content: space-around; align-items: flex-end; width: 100%; z-index: 10; position: relative; }
         
@@ -32,9 +34,9 @@
         .sd-slot { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; min-width: 120px; min-height: 100px; position: relative; transition: all 0.2s; padding-bottom: 30px; }
         .sd-slot.drag-over { background: rgba(255, 255, 255, 0.2); border-radius: 8px; }
         
-        /* El punto blanco que marca la posición en el campo */
-        .sd-dot { width: 20px; height: 20px; background: white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); }
-        .sd-pos-label { position: absolute; bottom: -20px; font-size: 0.7rem; font-weight: 900; color: rgba(255,255,255,0.9); text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        /* El punto blanco que marca la posición en el campo (Fijo para PDF) */
+        .sd-dot { width: 20px; height: 20px; background: white; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); position: absolute; bottom: 0; left: 0; right: 0; margin: 0 auto; }
+        .sd-pos-label { position: absolute; bottom: -22px; width: 100%; text-align: center; font-size: 0.7rem; font-weight: 900; color: rgba(255,255,255,0.9); text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
 
         /* Contenedor de las tarjetas apilables */
         .sd-cards-container { display: flex; flex-direction: column; gap: 4px; width: 100%; align-items: center; min-height: 40px; }
@@ -54,8 +56,6 @@
         /* Tarjeta Arrastrable del Buscador */
         .ficha-drag { background: #1e293b; color: white; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; cursor: grab; margin-bottom: 8px; border-left: 4px solid #3b82f6; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .ficha-drag:active { cursor: grabbing; }
-
-        .pdf-export-mode { width: 1200px !important; background: white !important; padding: 20px !important; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
@@ -108,7 +108,7 @@
                         </div>
                     </div>
 
-                    <div class="lg:col-span-8 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col">
+                    <div class="lg:col-span-8 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                         <div class="bg-blue-900 text-white p-4 flex justify-between items-center rounded-t-xl"><h2 class="font-bold text-lg">REGISTRO DE NUEVO JUGADOR</h2></div>
                         <div class="p-6 md:p-8">
                             <form id="formScouting" class="space-y-6">
@@ -217,6 +217,22 @@
                         </div>
                         
                         <div id="zonaExportarCampogramaScout" class="flex flex-col gap-6 flex-1 overflow-y-auto pb-10">
+                            
+                            <!-- HEADER PDF (Hidden by default) -->
+                            <div id="pdf-header-scout" class="hidden mb-2 pb-4 border-b-2 border-slate-200 justify-between items-center" data-html2canvas-ignore="false">
+                                <div class="flex items-center gap-4">
+                                    <img src="https://santapolacf.es/images/ESCUDO3.png" class="h-16" crossorigin="anonymous">
+                                    <div>
+                                        <h1 class="text-2xl font-black text-slate-900 tracking-tight">RCL SCOUT GROUP</h1>
+                                        <p class="text-slate-500 font-bold text-sm">Informe de Equipo Sombra (Shadow Team)</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-bold text-slate-700">Autor: <span id="pdf-ojeador-name-scout" class="text-blue-600">...</span></p>
+                                    <p class="text-xs text-slate-500 mt-1">Fecha: <span id="pdf-date-scout">...</span></p>
+                                </div>
+                            </div>
+
                             <!-- Leyenda -->
                             <div class="bg-slate-50 p-3 rounded border border-slate-200 flex flex-wrap gap-4 items-center text-sm">
                                 <span class="font-bold text-slate-700">Leyenda de Color:</span>
@@ -237,6 +253,7 @@
                                 <div id="scout-pitch-row-1" class="sd-row"></div>
                                 <div id="scout-pitch-row-0" class="sd-row"></div>
                             </div>
+                            
                             <!-- LISTADO AUTOMATICO -->
                             <div id="listadoPlantillaScout" class="bg-white p-6 border border-slate-200 rounded shadow-sm">
                                 <h3 class="font-black text-lg border-b pb-2 mb-4 text-slate-800">Listado de Equipo Sombra</h3>
@@ -340,6 +357,22 @@
                         </div>
                         
                         <div id="zonaExportarCampogramaAdmin" class="flex flex-col gap-6 flex-1 overflow-y-auto pb-10">
+                            
+                            <!-- HEADER PDF (Hidden by default) -->
+                            <div id="pdf-header-admin" class="hidden mb-2 pb-4 border-b-2 border-slate-200 justify-between items-center" data-html2canvas-ignore="false">
+                                <div class="flex items-center gap-4">
+                                    <img src="https://santapolacf.es/images/ESCUDO3.png" class="h-16" crossorigin="anonymous">
+                                    <div>
+                                        <h1 class="text-2xl font-black text-slate-900 tracking-tight">RCL SCOUT GROUP</h1>
+                                        <p class="text-slate-500 font-bold text-sm">Informe de Equipo Sombra Global (Shadow Team)</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-sm font-bold text-slate-700">Dirección Deportiva</p>
+                                    <p class="text-xs text-slate-500 mt-1">Fecha: <span id="pdf-date-admin">...</span></p>
+                                </div>
+                            </div>
+
                             <!-- Leyenda -->
                             <div class="bg-slate-50 p-3 rounded border border-slate-200 flex flex-wrap gap-4 items-center text-sm">
                                 <span class="font-bold text-slate-700">Leyenda:</span>
@@ -360,6 +393,7 @@
                                 <div id="admin-pitch-row-1" class="sd-row"></div>
                                 <div id="admin-pitch-row-0" class="sd-row"></div>
                             </div>
+                            
                             <!-- LISTADO AUTOMATICO -->
                             <div id="listadoPlantillaAdmin" class="bg-white p-6 border border-slate-200 rounded shadow-sm">
                                 <h3 class="font-black text-lg border-b pb-2 mb-4 text-slate-800">Listado de Equipo Sombra</h3>
@@ -417,6 +451,7 @@
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4 border-b pb-2">
                     <h3 class="font-bold text-lg text-slate-800">Historial de Informes (<span id="contadorInformes">0</span>)</h3>
+                    <!-- Solo el boton ignore, el historial si sale en pdf -->
                     <button onclick="exportarPdf('perfilParaExportar', 'Perfil_Jugador')" data-html2canvas-ignore class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-bold text-sm shadow">📄 Descargar Dossier PDF</button>
                 </div>
                 <div id="contenedorInformes" class="space-y-4 max-h-96 overflow-y-auto pr-2"></div>
@@ -440,7 +475,7 @@
     <script>
         // PEGA TUS ENLACES AQUI ABAJO
         const SCRIPT_URL_USERS = "https://script.google.com/macros/s/AKfycbxNQAdOPguxiqPQWSPuNHAUm3WO1_e5RnYO_PwtsZW03FycnfFbb389TOXzO0JV-7BN/exec";
-        const SCRIPT_URL_DB = "https://script.google.com/macros/s/AKfycbwrr3ARTTDAFiSBIKkI1SdoQUQyZbT2K3Wd3yeWB2hAP1q462XlJYTmQxRJenQFM3rhng/exec"; 
+        const SCRIPT_URL_DB = "https://script.google.com/macros/s/AKfycbysKmxdXuoaexleJrzKqv-mVQ7aHlLRTbHN1NcMiUn84GpguPmvOzzZPK-c7NHVCVxK_A/exec"; 
 
         let datosUsuario = {}; let datosMatrizGlobal = []; let datosFiltradosGlobal = []; let currentPage = 1; const itemsPerPage = 25; let jugadorEncontradoParaAutocomplete = null;
 
@@ -451,7 +486,7 @@
 
         function cambiarTab(rol, tabId) { document.querySelectorAll(`.${rol}-content`).forEach(el => el.classList.remove('active')); document.querySelectorAll(`.${rol}-tab`).forEach(el => el.classList.remove('active')); document.getElementById(tabId).classList.add('active'); event.currentTarget.classList.add('active'); }
 
-        // --- LOGIN Y ARRANQUE (FASE 1 Y 2 INTACTAS) ---
+        // --- LOGIN Y ARRANQUE ---
         document.getElementById("loginForm").addEventListener("submit", async (e) => {
             e.preventDefault(); document.getElementById("btnLogin").innerText = "Conectando...";
             try {
@@ -475,7 +510,7 @@
         });
         function mostrarError(msg) { document.getElementById("loginError").innerText = msg; document.getElementById("loginError").classList.remove("hidden"); document.getElementById("btnLogin").innerText = "Acceder al Sistema"; }
 
-        // --- OJEADOR FORMULARIO (FASE 1 Y 2 INTACTAS) ---
+        // --- OJEADOR FORMULARIO ---
         function comprobarJugadorExistente() {
             const nom = document.getElementById('nombre').value.trim().toLowerCase(); const ape = document.getElementById('apellidos').value.trim().toLowerCase();
             if(nom && ape && datosMatrizGlobal.length > 0) {
@@ -504,7 +539,7 @@
         });
         async function completarAsignacion() { const btn = document.getElementById("btnCompletarOjeador"); btn.innerText = "Completando..."; btn.disabled = true; try { await enviarA_Google({ accion: "subir_y_completar", fila: datosUsuario.fila, idCarpeta: datosUsuario.idCarpeta || "null" }, SCRIPT_URL_USERS); document.getElementById("cajaAsignacion").innerHTML = "<h3 class='text-emerald-600 font-black text-xl text-center py-6'>✅ Tarea Completada con Éxito</h3>"; } catch(e) { btn.innerText = "Error"; btn.disabled = false; } }
 
-        // --- BD, COORDINACION Y PERFILES (FASE 1 Y 2 INTACTAS) ---
+        // --- BD, COORDINACION Y PERFILES ---
         async function cargarPanelAdmin() {
             const tabla = document.getElementById("tablaAdmin"); const res = await enviarA_Google({ accion: "cargar_admin" }, SCRIPT_URL_USERS);
             if(res.exito && res.datos) { tabla.innerHTML = ""; res.datos.forEach(oj => { let bLeido = oj.leido ? `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-bold mr-2">👁️ Leído</span>` : `<span class="bg-slate-100 text-slate-500 px-2 py-1 rounded text-xs font-bold mr-2">No Leído</span>`; let bComp = oj.completado ? `<span class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs font-bold">✅ Completado</span>` : `<span class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs font-bold">⏳ Pendiente</span>`; let lCarpeta = oj.idCarpeta ? `https://drive.google.com/drive/folders/${oj.idCarpeta}` : '#'; let infoTiempos = `<p class="text-xs text-slate-400 mt-1.5">📅 Asignado: <span class="text-slate-600 font-medium">${oj.fechaAsignacion}</span></p>`; if (oj.completado) infoTiempos += `<p class="text-xs text-emerald-600">⏱️ Entregado: <span class="font-bold">${oj.fechaEntrega}</span></p>`; tabla.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="px-6 py-4 font-bold text-slate-700">${oj.nombre}</td><td class="px-6 py-4">${bLeido} ${bComp}</td><td class="px-6 py-4"><p class="text-sm font-bold text-slate-800">${oj.partido || 'Libre'}</p><p class="text-xs text-slate-500">${oj.equipo || '-'}</p>${infoTiempos}</td><td class="px-6 py-4 text-center space-x-1"><a href="${lCarpeta}" target="_blank" class="inline-block bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded text-xs font-bold transition">📁 Carpeta</a><button onclick="abrirModalAsignar(${oj.fila}, '${oj.nombre}', '${oj.partido}', '${oj.equipo}', '${oj.link}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold shadow transition ml-2">🎯 Asignar</button></td></tr>`; }); }
@@ -578,14 +613,15 @@
             document.getElementById('modalVisorDossier').classList.remove('hidden');
         }
         function cerrarVisorDossier() { document.getElementById('modalVisorDossier').classList.add('hidden'); }
+
         async function exportarPdf(id, nom) { const b = event.currentTarget; const tx = b.innerText; b.innerText = "Calculando..."; b.disabled = true; try { const el = document.getElementById(id); const cv = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: "#ffffff" }); const im = cv.toDataURL('image/jpeg', 1.0); const { jsPDF } = window.jspdf; const pf = new jsPDF('p', 'mm', 'a4'); const m = 10; const w = pf.internal.pageSize.getWidth() - (m*2); const h = (cv.height * w) / cv.width; pf.addImage(im, 'JPEG', m, m, w, h); pf.save(`${nom}.pdf`); } catch(e){} finally { b.innerText = tx; b.disabled = false; } }
 
         // =======================================================================================
-        // FASE 3: CAMPOGRAMAS ESTILO SCOUTDECISIÓN CON FORMACIONES ILIMITADAS
+        // FASE 3: CAMPOGRAMAS (HTML2CANVAS BUGFIX + CABECERA)
         // =======================================================================================
         
         let customLegends = {
-            'admin': [{ id: 'leg_def', color: '#10b981', text: 'Opción 1' }, { id: 'leg_def2', color: '#ef4444', text: 'Opción 2' }],
+            'admin': [{ id: 'leg_def', color: '#10b981', text: 'Titular' }, { id: 'leg_def2', color: '#ef4444', text: 'Descarte' }],
             'scout': [{ id: 'leg_def3', color: '#3b82f6', text: 'Interesante' }]
         };
 
@@ -600,21 +636,11 @@
         };
 
         function inicializarCampograma(prefijo) {
-            renderizarLeyenda(prefijo);
-            let unicos = {};
-            let baseDatos = prefijo === 'admin' ? datosMatrizGlobal : datosMatrizGlobal.filter(f => f[24] === datosUsuario.nombre);
-            baseDatos.forEach(f => { if(f[2]) unicos[(f[2]+" "+(f[3]||"")).trim().toLowerCase()] = f; });
-            const filtrados = Object.values(unicos).sort((a,b) => parseFloat((b[17]||"0").toString().replace(',','.')) - parseFloat((a[17]||"0").toString().replace(',','.')));
-            
+            renderizarLeyenda(prefijo); let unicos = {}; let baseDatos = prefijo === 'admin' ? datosMatrizGlobal : datosMatrizGlobal.filter(f => f[24] === datosUsuario.nombre); baseDatos.forEach(f => { if(f[2]) unicos[(f[2]+" "+(f[3]||"")).trim().toLowerCase()] = f; }); const filtrados = Object.values(unicos).sort((a,b) => parseFloat((b[17]||"0").toString().replace(',','.')) - parseFloat((a[17]||"0").toString().replace(',','.')));
             const contenedor = document.getElementById(`listaDrag${prefijo === 'admin' ? 'Admin' : 'Scout'}`); contenedor.innerHTML = '';
             filtrados.forEach((fila, i) => {
                 const nombreCorto = fila[2] + " " + (fila[3] ? fila[3].charAt(0) + "." : "");
-                contenedor.innerHTML += `
-                    <div class="ficha-drag" draggable="true" ondragstart="iniciarDrag(event, '${nombreCorto}', '${fila[17]||'-'}', '${fila[4]||'-'}', '${fila[14]||'-'}', '${fila[7]||'-'}', '${prefijo}')">
-                        <span class="w-8 font-black text-slate-400 text-xs">${fila[5]}</span>
-                        <span class="flex-1 truncate">${nombreCorto} <span class="text-xs font-normal text-slate-400">(${fila[4]})</span></span>
-                        <span class="text-emerald-400 font-black">${fila[17]||'-'}</span>
-                    </div>`;
+                contenedor.innerHTML += `<div class="ficha-drag" draggable="true" ondragstart="iniciarDrag(event, '${nombreCorto}', '${fila[17]||'-'}', '${fila[4]||'-'}', '${fila[14]||'-'}', '${fila[7]||'-'}', '${prefijo}')"><span class="w-8 font-black text-slate-400 text-xs">${fila[5]}</span><span class="flex-1 truncate">${nombreCorto} <span class="text-xs font-normal text-slate-400">(${fila[4]})</span></span><span class="text-emerald-400 font-black">${fila[17]||'-'}</span></div>`;
             });
             dibujarFormacion("4-2-3-1", prefijo);
         }
@@ -622,141 +648,110 @@
         document.getElementById('buscadorDragAdmin')?.addEventListener('input', (e) => fDrag(e, 'admin')); document.getElementById('buscadorDragScout')?.addEventListener('input', (e) => fDrag(e, 'scout'));
         function fDrag(e, p) { const txt = e.target.value.toLowerCase(); Array.from(document.getElementById(`listaDrag${p==='admin'?'Admin':'Scout'}`).children).forEach(d => { d.style.display = d.innerText.toLowerCase().includes(txt) ? 'flex' : 'none'; }); }
 
-        // LEYENDA (Colores Personalizados)
         function renderizarLeyenda(prefijo) {
             const list = document.getElementById(`legend-list-${prefijo}`); list.innerHTML = '';
-            customLegends[prefijo].forEach(item => {
-                list.innerHTML += `<div class="flex items-center gap-1 bg-white px-2 py-1 rounded shadow-sm border border-slate-200"><div class="w-3 h-3 rounded-full" style="background-color: ${item.color}"></div><span class="text-xs font-bold text-slate-700">${item.text}</span></div>`;
-            });
+            customLegends[prefijo].forEach(item => { list.innerHTML += `<div class="flex items-center gap-1 bg-white px-2 py-1 rounded shadow-sm border border-slate-200"><div class="w-3 h-3 rounded-full" style="background-color: ${item.color}"></div><span class="text-xs font-bold text-slate-700">${item.text}</span></div>`; });
         }
         function addLegend(prefijo) {
             const color = document.getElementById(`newColor-${prefijo}`).value; const text = document.getElementById(`newName-${prefijo}`).value.trim();
             if(text) { customLegends[prefijo].push({ id: 'leg_'+Date.now(), color: color, text: text }); document.getElementById(`newName-${prefijo}`).value = ''; renderizarLeyenda(prefijo); actualizarSelectoresColor(prefijo); }
         }
 
-        // PINTAR CAMPO Y FORMACIÓN
         function dibujarFormacion(codigo, prefijo) {
             const f = formacionesLibres[codigo];
             for(let i=0; i<=4; i++) {
                 const row = document.getElementById(`${prefijo}-pitch-row-${i}`); row.innerHTML = "";
                 f[i].forEach(posName => {
-                    // El Slot ahora tiene un punto blanco estilo ScoutDecisión
-                    row.innerHTML += `
-                        <div class="sd-slot" data-posname="${posName}" ondrop="soltarEnCampo(event, '${prefijo}')" ondragover="permitirSoltarCampo(event)">
-                            <div class="sd-cards-container"></div>
-                            <div class="sd-dot"></div>
-                            <div class="sd-pos-label">${posName}</div>
-                        </div>`;
+                    row.innerHTML += `<div class="sd-slot" data-posname="${posName}" ondrop="soltarEnCampo(event, '${prefijo}')" ondragover="permitirSoltarCampo(event)"><div class="sd-cards-container"></div><div class="sd-dot"></div><div class="sd-pos-label">${posName}</div></div>`;
                 });
             }
             actualizarListadoSD(prefijo);
         }
 
-        // DRAG & DROP
         function iniciarDrag(ev, nombre, nota, ano, equipo, altura, prefijo) { 
             ev.dataTransfer.setData("text/plain", JSON.stringify({ n: nombre, nt: nota, a: ano, eq: equipo, h: altura, p: prefijo })); 
-            // Si arrastramos desde dentro del campo, marcamos el elemento
             if(ev.target.classList.contains('sd-card')) { ev.target.classList.add('dragging-card'); }
         }
-        function permitirSoltarCampo(ev) { 
-            ev.preventDefault(); let slot = ev.target.closest('.sd-slot'); if(slot) slot.classList.add('drag-over'); 
-        }
+        function permitirSoltarCampo(ev) { ev.preventDefault(); let slot = ev.target.closest('.sd-slot'); if(slot) slot.classList.add('drag-over'); }
         document.addEventListener('dragleave', (ev) => { if(ev.target.classList?.contains('sd-slot')) ev.target.classList.remove('drag-over'); });
 
         function soltarEnCampo(ev, prefijoDestino) {
-            ev.preventDefault();
-            let slot = ev.target.closest('.sd-slot'); if(!slot) return; slot.classList.remove('drag-over');
+            ev.preventDefault(); let slot = ev.target.closest('.sd-slot'); if(!slot) return; slot.classList.remove('drag-over');
+            const cont = slot.querySelector('.sd-cards-container'); const draggingCard = document.querySelector('.dragging-card');
             
-            const cont = slot.querySelector('.sd-cards-container');
-            const draggingCard = document.querySelector('.dragging-card');
-            
-            // Si viene de arrastrar dentro del propio campo (Reordenamiento)
             if (draggingCard) {
-                // Encontrar dónde lo ha soltado verticalmente (insertBefore)
                 const afterElement = getDragAfterElement(cont, ev.clientY);
                 if (afterElement == null) { cont.appendChild(draggingCard); } else { cont.insertBefore(draggingCard, afterElement); }
-                draggingCard.classList.remove('dragging-card');
-                actualizarListadoSD(prefijoDestino);
-                return;
+                draggingCard.classList.remove('dragging-card'); actualizarListadoSD(prefijoDestino); return;
             }
 
-            // Si viene de la barra lateral (Nuevo)
-            const dataStr = ev.dataTransfer.getData("text/plain"); if(!dataStr) return;
-            const d = JSON.parse(dataStr); if(d.p !== prefijoDestino) return;
+            const dataStr = ev.dataTransfer.getData("text/plain"); if(!dataStr) return; const d = JSON.parse(dataStr); if(d.p !== prefijoDestino) return;
 
-            // Generar options para el select de la tarjeta (colores leyenda)
             let optionsHTML = `<option value="#334155" style="background:#334155; color:white">Neutro</option>`;
             customLegends[prefijoDestino].forEach(l => { optionsHTML += `<option value="${l.color}" style="background:${l.color}; color:white">${l.text}</option>`; });
 
             const card = document.createElement('div');
             card.className = "sd-card bg-slate-700"; card.draggable = true; card.dataset.nom = d.n; card.dataset.nota = d.nt; card.dataset.ano = d.a; card.dataset.eq = d.eq;
-            card.ondragstart = (e) => iniciarDrag(e, d.n, d.nt, d.a, d.eq, d.h, prefijoDestino);
-            card.ondragend = (e) => card.classList.remove('dragging-card');
+            card.ondragstart = (e) => iniciarDrag(e, d.n, d.nt, d.a, d.eq, d.h, prefijoDestino); card.ondragend = (e) => card.classList.remove('dragging-card');
 
-            card.innerHTML = `
-                <div class="c-name" title="${d.n}">${d.n} / ${d.a}</div>
-                <div class="c-info">${d.eq} / ${d.h ? d.h+'cm' : '-'}</div>
-                <div class="sd-card-controls" data-html2canvas-ignore>
-                    <button type="button" onclick="this.closest('.sd-card').remove(); actualizarListadoSD('${prefijoDestino}')" class="sd-btn-del">X</button>
-                    <select class="text-black text-[9px] outline-none" onchange="this.closest('.sd-card').style.backgroundColor = this.value">${optionsHTML}</select>
-                </div>
-            `;
-            cont.appendChild(card);
-            actualizarListadoSD(prefijoDestino);
+            card.innerHTML = `<div class="c-name" title="${d.n}">${d.n} / ${d.a}</div><div class="c-info">${d.eq} / ${d.h ? d.h+'cm' : '-'}</div><div class="sd-card-controls" data-html2canvas-ignore><button type="button" onclick="this.closest('.sd-card').remove(); actualizarListadoSD('${prefijoDestino}')" class="sd-btn-del">X</button><select class="text-black text-[9px] outline-none" onchange="this.closest('.sd-card').style.backgroundColor = this.value">${optionsHTML}</select></div>`;
+            cont.appendChild(card); actualizarListadoSD(prefijoDestino);
         }
 
-        // Lógica matemática para saber dónde colocar la tarjeta al ordenar
         function getDragAfterElement(container, y) {
             const draggableElements = [...container.querySelectorAll('.sd-card:not(.dragging-card)')];
-            return draggableElements.reduce((closest, child) => {
-                const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2;
+            return draggableElements.reduce((closest, child) => { const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2;
                 if (offset < 0 && offset > closest.offset) { return { offset: offset, element: child }; } else { return closest; }
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
-        // Cuando se añade un nuevo color a la leyenda, hay que meterlo en los selectores de las tarjetas existentes
         function actualizarSelectoresColor(prefijo) {
-            const pitch = document.getElementById(`pitch-${prefijo}`);
-            let optionsHTML = `<option value="#334155" style="background:#334155; color:white">Neutro</option>`;
-            customLegends[prefijo].forEach(l => { optionsHTML += `<option value="${l.color}" style="background:${l.color}; color:white">${l.text}</option>`; });
-            pitch.querySelectorAll('select').forEach(sel => {
-                const valAntiguo = sel.value; sel.innerHTML = optionsHTML; sel.value = valAntiguo;
-            });
+            const pitch = document.getElementById(`pitch-${prefijo}`); let optionsHTML = `<option value="#334155" style="background:#334155; color:white">Neutro</option>`; customLegends[prefijo].forEach(l => { optionsHTML += `<option value="${l.color}" style="background:${l.color}; color:white">${l.text}</option>`; });
+            pitch.querySelectorAll('select').forEach(sel => { const valAntiguo = sel.value; sel.innerHTML = optionsHTML; sel.value = valAntiguo; });
         }
 
-        // LISTADO INFERIOR
         function actualizarListadoSD(prefijo) {
             const dom = document.getElementById(prefijo === 'admin' ? 'cuerpoListadoAdmin' : 'cuerpoListadoScout'); dom.innerHTML = '';
-            const slots = document.getElementById(`pitch-${prefijo}`).querySelectorAll('.sd-slot');
-            let hay = false;
-
+            const slots = document.getElementById(`pitch-${prefijo}`).querySelectorAll('.sd-slot'); let hay = false;
             slots.forEach(slot => {
-                const pos = slot.dataset.posname;
-                const cards = Array.from(slot.querySelectorAll('.sd-card')).map(c => ({ n: c.dataset.nom, a: c.dataset.ano, nt: c.dataset.nota, col: c.style.backgroundColor || '#334155' }));
+                const pos = slot.dataset.posname; const cards = Array.from(slot.querySelectorAll('.sd-card')).map(c => ({ n: c.dataset.nom, a: c.dataset.ano, nt: c.dataset.nota, col: c.style.backgroundColor || '#334155' }));
                 if(cards.length > 0) {
-                    hay = true;
-                    let hList = `<div><h4 class="font-bold text-slate-600 border-b border-slate-300 pb-1 mb-2">${pos}</h4><ul class="space-y-1">`;
+                    hay = true; let hList = `<div><h4 class="font-bold text-slate-600 border-b border-slate-300 pb-1 mb-2">${pos}</h4><ul class="space-y-1">`;
                     cards.forEach(c => { hList += `<li class="flex justify-between items-center bg-slate-50 p-1 rounded border border-slate-100 text-xs"><div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full" style="background:${c.col}"></div><span class="font-bold">${c.n} <span class="font-normal text-slate-400">(${c.a})</span></span></div><span class="font-black text-emerald-600">${c.nt}</span></li>`; });
                     hList += `</ul></div>`; dom.innerHTML += hList;
                 }
             });
         }
 
-        // PDF EXPORT
+        // --- EXPORTACIÓN PERFECTA CON CABECERA ---
         async function exportarShadowTeam(idContenedor, nombreArchivo) {
             const btn = event.currentTarget; const textoOriginal = btn.innerText; btn.innerText = "Calculando PDF..."; btn.disabled = true;
             try {
                 const zonaPdf = document.getElementById(idContenedor).querySelector('.flex-col.gap-6') || document.getElementById(idContenedor).querySelector('.flex-col.gap-8'); 
-                zonaPdf.classList.add('pdf-export-mode');
+                
+                const prefijo = idContenedor.includes('Scout') ? 'scout' : 'admin';
+                const headerPdf = document.getElementById(`pdf-header-${prefijo}`);
+                if(headerPdf) {
+                    if(document.getElementById(`pdf-ojeador-name-${prefijo}`)) { document.getElementById(`pdf-ojeador-name-${prefijo}`).innerText = datosUsuario.nombre || "Scout"; }
+                    if(document.getElementById(`pdf-date-${prefijo}`)) { document.getElementById(`pdf-date-${prefijo}`).innerText = new Date().toLocaleDateString(); }
+                    headerPdf.classList.remove('hidden'); headerPdf.classList.add('flex');
+                }
+
+                zonaPdf.style.backgroundColor = "#ffffff";
+                zonaPdf.style.padding = "20px";
+                
+                await new Promise(r => setTimeout(r, 200));
+
                 const canvas = await html2canvas(zonaPdf, { scale: 2, useCORS: true, backgroundColor: "#ffffff" });
-                zonaPdf.classList.remove('pdf-export-mode');
+                
+                if(headerPdf) { headerPdf.classList.add('hidden'); headerPdf.classList.remove('flex'); }
+                zonaPdf.style.padding = ""; zonaPdf.style.backgroundColor = "";
 
                 const imgData = canvas.toDataURL('image/jpeg', 1.0); const { jsPDF } = window.jspdf; const pdf = new jsPDF('p', 'mm', 'a4');
                 const margin = 10; const pdfWidth = pdf.internal.pageSize.getWidth() - (margin * 2); const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
                 pdf.addImage(imgData, 'JPEG', margin, margin, pdfWidth, pdfHeight); pdf.save(`${nombreArchivo}.pdf`);
             } catch(e) { alert("Error al exportar."); } finally { btn.innerText = textoOriginal; btn.disabled = false; }
         }
-
     </script>
 </body>
 </html>
