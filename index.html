@@ -40,7 +40,6 @@
         
         <main class="p-4 md:p-6 max-w-[1400px] mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
-            <!-- COLUMNA IZQUIERDA: TAREA ACTIVA (Recuadro inferior eliminado) -->
             <div class="lg:col-span-4 flex flex-col gap-6">
                 <div id="cajaAsignacion" class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 relative">
                     <div class="absolute top-0 left-0 w-1 h-full bg-emerald-500 rounded-l-xl"></div>
@@ -55,7 +54,6 @@
                 </div>
             </div>
 
-            <!-- COLUMNA DERECHA: FORMULARIO -->
             <div class="lg:col-span-8 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
                 <div class="bg-blue-900 text-white p-4 flex justify-between items-center">
                     <h2 class="font-bold text-lg">REGISTRO DE NUEVO JUGADOR</h2>
@@ -63,34 +61,38 @@
                 <div class="p-6 md:p-8">
                     <form id="formScouting" class="space-y-6">
                         
-                        <!-- SECCIÓN 1 -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-slate-100">
                             <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">REC <span class="text-blue-500">(?)</span><span class="tooltiptext">FICHAR: Firmar ya.<br>RPC: Tener en cuenta.<br>NMA: Necesita análisis.<br>NCE: No da nivel.<br>SP: Supera posibilidades.</span></label><select id="rec" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="FICHAR">FICHAR</option><option value="RPC">RPC</option><option value="NMA">NMA</option><option value="NCE">NCE</option><option value="SP">SP</option></select></div>
                             <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">NIVEL <span class="text-blue-500">(?)</span><span class="tooltiptext">NI: Inferior.<br>1: Suplente.<br>2: Rotación.<br>3: Titular.<br>4: Estrella.<br>NS: Supera Nivel.<br>AP: Alto Potencial.</span></label><select id="nivel" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="NI">NI</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="NS">NS</option><option value="AP">AP</option></select></div>
                         </div>
 
-                        <!-- SECCIÓN 2 -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1">NOMBRE</label><input type="text" id="nombre" class="w-full px-3 py-2 border rounded autocapitalize outline-none focus:border-blue-600" required></div>
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1">APELLIDO/S</label><input type="text" id="apellidos" class="w-full px-3 py-2 border rounded autocapitalize outline-none focus:border-blue-600" required></div>
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1">AÑO</label><input type="text" id="ano" placeholder="ej: '04" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
+                        </div>
+                        
+                        <!-- RECUADRO AUTOCOMPLETAR -->
+                        <div id="cajaAutocomplete" class="hidden p-3 bg-blue-50 border border-blue-200 rounded text-sm text-blue-800 flex justify-between items-center mb-6">
+                            <span>💡 <strong>Jugador detectado en Matriz.</strong> ¿Cargar sus datos básicos?</span> 
+                            <button type="button" onclick="aplicarAutocomplete()" class="bg-blue-600 text-white px-3 py-1 rounded font-bold hover:bg-blue-700 shadow-sm transition">Autocompletar</button>
+                        </div>
+
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pb-6 border-b border-slate-100">
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">NOMBRE <span class="text-blue-500">(?)</span><span class="tooltiptext">Primera mayúscula, resto minúscula.</span></label><input type="text" id="nombre" class="w-full px-3 py-2 border rounded autocapitalize outline-none focus:border-blue-600" required></div>
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">APELLIDO/S <span class="text-blue-500">(?)</span><span class="tooltiptext">Primera mayúscula, resto minúscula.</span></label><input type="text" id="apellidos" class="w-full px-3 py-2 border rounded autocapitalize outline-none focus:border-blue-600" required></div>
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">AÑO <span class="text-blue-500">(?)</span><span class="tooltiptext">Formato: '04</span></label><input type="text" id="ano" placeholder="ej: '04" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
-                            
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">POSICIÓN <span class="text-blue-500">(?)</span><span class="tooltiptext">Solo posiciones amarillas.</span></label><select id="pos" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="POR">POR</option><option value="DFC">DFC</option><option value="LD">LD</option><option value="LI">LI</option><option value="MC">MC</option><option value="MD">MD</option><option value="MI">MI</option><option value="MP">MP</option><option value="ED">ED</option><option value="EI">EI</option><option value="DR">DR</option><option value="DM">DM</option></select></div>
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">2POS <span class="text-blue-500">(?)</span><span class="tooltiptext">Posiciones amarillas o naranjas. Ej: CAI - DFCI</span></label><input type="text" id="pos2" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
-                            <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">PIE <span class="text-blue-500">(?)</span><span class="tooltiptext">D (Diestro), I (Zurdo), A (Ambidiestro)</span></label><select id="pie" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"><option value="">Seleccionar...</option><option value="D">D</option><option value="I">I</option><option value="A">A</option></select></div>
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1">POSICIÓN</label><select id="pos" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required><option value="">Seleccionar...</option><option value="POR">POR</option><option value="DFC">DFC</option><option value="LD">LD</option><option value="LI">LI</option><option value="MC">MC</option><option value="MD">MD</option><option value="MI">MI</option><option value="MP">MP</option><option value="ED">ED</option><option value="EI">EI</option><option value="DC">DC</option><option value="DM">DM</option></select></div>
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1">2POS</label><input type="text" id="pos2" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
+                            <div><label class="block text-sm font-bold text-slate-700 mb-1">PIE</label><select id="pie" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"><option value="">Seleccionar...</option><option value="D">D</option><option value="I">I</option><option value="A">A</option></select></div>
                             
                             <div><label class="block text-sm font-bold text-slate-700 mb-1">ALTURA (cm)</label><input type="number" id="altura" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
                             <div><label class="block text-sm font-bold text-slate-700 mb-1">PESO (kg)</label><input type="number" id="peso" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
                             <div><label class="block text-sm font-bold text-slate-700 mb-1">NACIONALIDAD</label><input type="text" id="nacionalidad" value="ESP" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
                         </div>
 
-                        <!-- SECCIÓN 3 -->
                         <div class="space-y-4 pb-6 border-b border-slate-100">
                             <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">ATRIBUTOS CLAVE <span class="text-blue-500">(?)</span><span class="tooltiptext">Cualidades principales, cortas.</span></label><input type="text" id="atributos" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></div>
                             <div><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">DESCRIPCIÓN <span class="text-blue-500">(?)</span><span class="tooltiptext">Estilo de juego, físico y opinión.</span></label><textarea id="descripcion" rows="3" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600" required></textarea></div>
                         </div>
 
-                        <!-- SECCIÓN 4 -->
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 pb-6 border-b border-slate-100">
                             <div class="md:col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1 tooltip">LIGA <span class="text-blue-500">(?)</span><span class="tooltiptext">Ej: 1ªFFCV - G4</span></label><input type="text" id="liga" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
                             <div class="md:col-span-2"><label class="block text-sm font-bold text-slate-700 mb-1">EQUIPO</label><input type="text" id="equipo" class="w-full px-3 py-2 border rounded uppercase outline-none focus:border-blue-600" required></div>
@@ -101,7 +103,6 @@
                             <div><label class="block text-sm font-bold text-slate-700 mb-1">LINK FFCV</label><input type="url" id="link" class="w-full px-3 py-2 border rounded outline-none focus:border-blue-600"></div>
                         </div>
 
-                        <!-- ARCHIVOS INDIVIDUALES DEL JUGADOR -->
                         <div class="bg-slate-50 p-4 rounded border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div><label class="block text-sm font-bold text-slate-700 mb-1">📄 Dossier Individual (PDF Opcional)</label><input type="file" id="jugadorPdf" accept=".pdf" class="w-full text-sm text-slate-500 bg-white border p-1 rounded"></div>
                             <div><label class="block text-sm font-bold text-slate-700 mb-1">📺 Link de Vídeo (YouTube, Hudl...)</label><input type="url" id="jugadorVideoUrl" placeholder="https://..." class="w-full px-3 py-2 border rounded text-sm outline-none focus:border-blue-600"></div>
@@ -122,7 +123,6 @@
             <button onclick="cargarPanelAdmin(); cargarMatrizGlobal();" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded text-sm font-bold shadow transition">🔄 Actualizar Todo</button>
         </header>
 
-        <!-- Navegación Admin -->
         <nav class="bg-white shadow-sm border-b border-slate-200 flex justify-center gap-8 font-bold text-slate-500">
             <button onclick="cambiarTab('admin', 'tab-coord')" class="tab-btn admin-tab active py-4 px-2 hover:text-emerald-600 transition">🛡️ Coordinación</button>
             <button onclick="cambiarTab('admin', 'tab-bd')" class="tab-btn admin-tab py-4 px-2 hover:text-emerald-600 transition">📊 Base de Datos y Filtros</button>
@@ -130,7 +130,6 @@
 
         <main class="p-6 max-w-7xl mx-auto w-full space-y-8">
             
-            <!-- ADMIN: COORDINACIÓN OJEADORES (Intacta) -->
             <div id="tab-coord" class="tab-content admin-content active">
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="bg-slate-800 text-white px-6 py-3 border-b"><h2 class="font-bold text-sm">COORDINACIÓN DE TAREAS</h2></div>
@@ -147,14 +146,13 @@
                 </div>
             </div>
 
-            <!-- ADMIN: BASE DE DATOS GLOBAL Y PAGINACIÓN -->
+            <!-- TABLA Y PAGINACIÓN ARREGLADAS (NUEVOS ÍNDICES) -->
             <div id="tab-bd" class="tab-content admin-content">
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="bg-blue-900 text-white px-6 py-3 border-b flex justify-between items-center">
                         <h2 class="font-bold text-sm">BASE DE DATOS MATRIZ</h2>
                     </div>
                     
-                    <!-- Panel de Filtros -->
                     <div class="p-4 border-b border-slate-200 bg-slate-50 grid grid-cols-1 md:grid-cols-6 gap-3">
                         <div class="md:col-span-2"><label class="text-xs font-bold text-slate-500 uppercase">Buscar (Texto)</label><input type="text" id="filtroTexto" placeholder="Nombre, equipo, atributos..." class="w-full px-3 py-1.5 border rounded outline-none focus:border-blue-500 text-sm"></div>
                         <div><label class="text-xs font-bold text-slate-500 uppercase">Posición</label><select id="filtroPos" class="w-full px-3 py-1.5 border rounded outline-none text-sm"><option value="">Todas</option><option value="POR">POR</option><option value="DFC">DFC</option><option value="LI">LI</option><option value="LD">LD</option><option value="MC">MC</option><option value="MD">MD</option><option value="MI">MI</option><option value="MP">MP</option><option value="ED">ED</option><option value="EI">EI</option><option value="DC">DC</option><option value="DM">DM</option></select></div>
@@ -167,7 +165,7 @@
                     <div class="overflow-x-auto min-h-[400px]">
                         <table class="w-full text-left text-sm whitespace-nowrap">
                             <thead class="bg-white border-b border-slate-200 text-slate-600 uppercase text-xs font-bold">
-                                <tr><th class="px-4 py-3">Rec</th><th class="px-4 py-3">Nombre</th><th class="px-4 py-3">Año</th><th class="px-4 py-3">Pos</th><th class="px-4 py-3">Equipo</th><th class="px-4 py-3">Pie</th><th class="px-4 py-3 text-center">Nota</th></tr>
+                                <tr><th class="px-4 py-3">Rec</th><th class="px-4 py-3">Nombre</th><th class="px-4 py-3">Año</th><th class="px-4 py-3">Pos</th><th class="px-4 py-3">Equipo</th><th class="px-4 py-3 text-center">Pie</th><th class="px-4 py-3 text-center">Nota Media</th></tr>
                             </thead>
                             <tbody id="cuerpoMatrizGlobal" class="divide-y divide-slate-100">
                                 <tr><td colspan="7" class="px-6 py-10 text-center text-slate-500">Esperando conexión con la Base de Datos...</td></tr>
@@ -175,7 +173,6 @@
                         </table>
                     </div>
                     
-                    <!-- Paginación -->
                     <div class="bg-slate-50 border-t border-slate-200 p-4 flex justify-between items-center text-sm font-bold text-slate-600">
                         <button id="btnPrevPage" onclick="cambiarPagina(-1)" class="bg-white border border-slate-300 px-4 py-2 rounded hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition">Anterior</button>
                         <span id="txtInfoPaginacion">Página 1 de 1</span>
@@ -186,7 +183,7 @@
         </main>
     </div>
 
-    <!-- MODAL ASIGNAR PARTIDO (Intacto) -->
+    <!-- MODAL ASIGNAR PARTIDO -->
     <div id="modalAsignar" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
             <h2 class="text-xl font-bold mb-4 border-b pb-2">Asignar Nuevo Partido</h2>
@@ -209,21 +206,16 @@
         // =========================================================================
         // PEGA TUS ENLACES AQUÍ
         // =========================================================================
-        
         const SCRIPT_URL_USERS = "https://script.google.com/macros/s/AKfycbxNQAdOPguxiqPQWSPuNHAUm3WO1_e5RnYO_PwtsZW03FycnfFbb389TOXzO0JV-7BN/exec";
         const SCRIPT_URL_DB = "https://script.google.com/macros/s/AKfycbwrr3ARTTDAFiSBIKkI1SdoQUQyZbT2K3Wd3yeWB2hAP1q462XlJYTmQxRJenQFM3rhng/exec"; 
-        
         // =========================================================================
 
         let datosUsuario = {};
-        
-        // Variables para la paginación global
         let datosMatrizGlobal = [];
         let datosFiltradosGlobal = [];
-        let currentPage = 1;
-        const itemsPerPage = 25;
+        let currentPage = 1; const itemsPerPage = 25;
+        let jugadorEncontradoParaAutocomplete = null;
 
-        // Utilidad Fetch
         async function enviarA_Google(datos, url = SCRIPT_URL_USERS) {
             const respuesta = await fetch(url, { method: "POST", body: JSON.stringify(datos), headers: { "Content-Type": "text/plain;charset=utf-8" }});
             return await respuesta.json();
@@ -238,21 +230,17 @@
 
         // --- LOGIN ---
         document.getElementById("loginForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            document.getElementById("btnLogin").innerText = "Conectando...";
+            e.preventDefault(); document.getElementById("btnLogin").innerText = "Conectando...";
             const correo = document.getElementById("correo").value;
             const contrasena = document.getElementById("contrasena").value;
             
             try {
                 const res = await enviarA_Google({ accion: "login", correo: correo, contrasena: contrasena }, SCRIPT_URL_USERS);
                 if(res.exito) {
-                    datosUsuario = res;
-                    document.getElementById("login-screen").classList.add("hidden");
-
+                    datosUsuario = res; document.getElementById("login-screen").classList.add("hidden");
                     if(res.isAdmin) {
                         document.getElementById("admin-screen").classList.remove("hidden");
-                        cargarPanelAdmin();
-                        cargarMatrizGlobal(); // Carga la BD automáticamente
+                        cargarPanelAdmin(); cargarMatrizGlobal();
                     } else {
                         document.getElementById("dashboard-screen").classList.remove("hidden");
                         document.getElementById("nombreUsuario").innerText = `Scout: ${res.nombre}`;
@@ -263,6 +251,7 @@
                         if(res.link && res.link.trim() !== "" && res.link !== "undefined") {
                             btnVid.href = res.link; btnVid.classList.remove("hidden");
                         } else { btnVid.classList.add("hidden"); }
+                        cargarMatrizGlobal(); // Carga silenciada para el autocompletado
                     }
                 } else { mostrarError("Credenciales incorrectas."); }
             } catch (error) { mostrarError("Error de conexión."); }
@@ -274,30 +263,54 @@
             document.getElementById("btnLogin").innerText = "Acceder al Sistema";
         }
 
-        // --- FUNCIONES OJEADOR ---
-        function leerBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader(); reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result.split(',')[1]);
-                reader.onerror = error => reject(error);
-            });
+        // --- OJEADOR: AUTOCOMPLETADO Y REGISTRO ---
+        function comprobarJugadorExistente() {
+            const nom = document.getElementById('nombre').value.trim().toLowerCase();
+            const ape = document.getElementById('apellidos').value.trim().toLowerCase();
+            if(nom && ape && datosMatrizGlobal.length > 0) {
+                const fullName = nom + " " + ape;
+                const coincidencias = datosMatrizGlobal.filter(f => ((f[2] || "").trim().toLowerCase() + " " + (f[3] || "").trim().toLowerCase()) === fullName);
+                
+                if(coincidencias.length > 0) {
+                    jugadorEncontradoParaAutocomplete = coincidencias[coincidencias.length - 1]; // Cogemos el más reciente
+                    document.getElementById('cajaAutocomplete').classList.remove('hidden');
+                } else {
+                    document.getElementById('cajaAutocomplete').classList.add('hidden');
+                    jugadorEncontradoParaAutocomplete = null;
+                }
+            }
         }
+        document.getElementById('nombre').addEventListener('blur', comprobarJugadorExistente);
+        document.getElementById('apellidos').addEventListener('blur', comprobarJugadorExistente);
+
+        function aplicarAutocomplete() {
+            if(jugadorEncontradoParaAutocomplete) {
+                const j = jugadorEncontradoParaAutocomplete;
+                document.getElementById('ano').value = j[4] || "";
+                document.getElementById('pos').value = j[5] || "";
+                document.getElementById('pos2').value = j[6] || "";
+                document.getElementById('altura').value = j[7] || "";
+                document.getElementById('peso').value = j[8] || "";
+                document.getElementById('pie').value = j[9] || "";
+                document.getElementById('nacionalidad').value = j[10] || "ESP";
+                document.getElementById('liga').value = j[13] || "";
+                document.getElementById('equipo').value = j[14] || "";
+                document.getElementById('cajaAutocomplete').innerHTML = "<strong>✅ Datos rellenados.</strong>";
+            }
+        }
+
+        function leerBase64(file) { return new Promise((resolve, reject) => { const reader = new FileReader(); reader.readAsDataURL(file); reader.onload = () => resolve(reader.result.split(',')[1]); reader.onerror = error => reject(error); }); }
 
         async function completarAsignacion() {
             const btn = document.getElementById("btnCompletarOjeador"); btn.innerText = "Completando..."; btn.disabled = true;
-            try { 
-                // Añadido idCarpeta por si tu script de usuarios lo requiere para no romperse
-                await enviarA_Google({ accion: "subir_y_completar", fila: datosUsuario.fila, idCarpeta: datosUsuario.idCarpeta || "null" }, SCRIPT_URL_USERS); 
-                document.getElementById("cajaAsignacion").innerHTML = "<h3 class='text-emerald-600 font-black text-xl text-center py-6'>✅ Tarea Completada con Éxito</h3>"; 
-            } catch(e) { btn.innerText = "Error. Reintentar"; btn.disabled = false; }
+            try { await enviarA_Google({ accion: "subir_y_completar", fila: datosUsuario.fila, idCarpeta: datosUsuario.idCarpeta || "null" }, SCRIPT_URL_USERS); document.getElementById("cajaAsignacion").innerHTML = "<h3 class='text-emerald-600 font-black text-xl text-center py-6'>✅ Tarea Completada con Éxito</h3>"; } catch(e) { btn.innerText = "Error. Reintentar"; btn.disabled = false; }
         }
 
         document.querySelectorAll('.autocapitalize').forEach(input => { input.addEventListener('input', e => e.target.value = e.target.value.toLowerCase().replace(/(^\w|\s\w)/g, m => m.toUpperCase())); });
         document.getElementById('ano')?.addEventListener('blur', e => { let val = e.target.value.trim(); if (val.length === 2 && !val.includes("'")) e.target.value = "'" + val; });
 
         document.getElementById("formScouting")?.addEventListener("submit", async (e) => {
-            e.preventDefault(); 
-            const btn = document.getElementById("btnEnviarRegistro"); btn.innerText = "GUARDANDO..."; btn.disabled = true;
+            e.preventDefault(); const btn = document.getElementById("btnEnviarRegistro"); btn.innerText = "GUARDANDO..."; btn.disabled = true;
             
             const datosJugador = {
                 accion: "guardar_jugador", ojeador: datosUsuario.nombre || "Scout",
@@ -312,7 +325,6 @@
                 fecha: document.getElementById('fecha').value, val: document.getElementById('val').value, 
                 link: document.getElementById('link').value, linkVideo: document.getElementById('jugadorVideoUrl').value
             };
-
             const pdfJugador = document.getElementById("jugadorPdf").files[0];
             if(pdfJugador) datosJugador.pdfBase64 = await leerBase64(pdfJugador);
 
@@ -320,12 +332,12 @@
                 await enviarA_Google(datosJugador, SCRIPT_URL_DB);
                 document.getElementById('formScouting').reset();
                 document.getElementById('mensajeExitoRegistro').classList.remove('hidden');
+                document.getElementById('cajaAutocomplete').classList.add('hidden');
                 setTimeout(() => document.getElementById('mensajeExitoRegistro').classList.add('hidden'), 4000);
-            } catch (error) { alert("Error guardando el jugador."); } 
-            finally { btn.innerText = "REGISTRAR JUGADOR EN LA MATRIZ"; btn.disabled = false; }
+            } catch (error) { alert("Error guardando el jugador."); } finally { btn.innerText = "REGISTRAR JUGADOR EN LA MATRIZ"; btn.disabled = false; }
         });
 
-        // --- PANEL ADMINISTRADOR (COORDINACIÓN) ---
+        // --- ADMIN: COORDINACIÓN ---
         async function cargarPanelAdmin() {
             const tabla = document.getElementById("tablaAdmin");
             const res = await enviarA_Google({ accion: "cargar_admin" }, SCRIPT_URL_USERS);
@@ -338,16 +350,7 @@
                     let infoTiempos = `<p class="text-xs text-slate-400 mt-1.5">📅 Asignado: <span class="text-slate-600 font-medium">${oj.fechaAsignacion}</span></p>`;
                     if (oj.completado) infoTiempos += `<p class="text-xs text-emerald-600">⏱️ Entregado: <span class="font-bold">${oj.fechaEntrega}</span></p>`;
 
-                    tabla.innerHTML += `
-                        <tr class="hover:bg-slate-50 border-b">
-                            <td class="px-6 py-4 font-bold text-slate-700">${oj.nombre}</td>
-                            <td class="px-6 py-4">${bLeido} ${bComp}</td>
-                            <td class="px-6 py-4"><p class="text-sm font-bold text-slate-800">${oj.partido || 'Libre'}</p><p class="text-xs text-slate-500">${oj.equipo || '-'}</p>${infoTiempos}</td>
-                            <td class="px-6 py-4 text-center space-x-1">
-                                <a href="${lCarpeta}" target="_blank" class="inline-block bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded text-xs font-bold transition">📁 Carpeta</a>
-                                <button onclick="abrirModalAsignar(${oj.fila}, '${oj.nombre}', '${oj.partido}', '${oj.equipo}', '${oj.link}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold shadow transition ml-2">🎯 Asignar</button>
-                            </td>
-                        </tr>`;
+                    tabla.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="px-6 py-4 font-bold text-slate-700">${oj.nombre}</td><td class="px-6 py-4">${bLeido} ${bComp}</td><td class="px-6 py-4"><p class="text-sm font-bold text-slate-800">${oj.partido || 'Libre'}</p><p class="text-xs text-slate-500">${oj.equipo || '-'}</p>${infoTiempos}</td><td class="px-6 py-4 text-center space-x-1"><a href="${lCarpeta}" target="_blank" class="inline-block bg-slate-200 hover:bg-slate-300 px-3 py-1 rounded text-xs font-bold transition">📁 Carpeta</a><button onclick="abrirModalAsignar(${oj.fila}, '${oj.nombre}', '${oj.partido}', '${oj.equipo}', '${oj.link}')" class="bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold shadow transition ml-2">🎯 Asignar</button></td></tr>`;
                 });
             }
         }
@@ -356,15 +359,11 @@
         function cerrarModalAsignar() { document.getElementById("modalAsignar").classList.add("hidden"); }
         async function guardarAsignacion() { const btn = document.getElementById("btnGuardarAsignacion"); btn.innerText = "Enviando..."; btn.disabled = true; await enviarA_Google({ accion: "asignar_tarea", fila: document.getElementById("asignarFila").value, partido: document.getElementById("asigPartido").value, equipo: document.getElementById("asigEquipo").value, link: document.getElementById("asigLink").value }, SCRIPT_URL_USERS); cerrarModalAsignar(); btn.innerText = "Enviar"; btn.disabled = false; cargarPanelAdmin(); }
 
-        // --- PANEL ADMINISTRADOR (BASE DE DATOS Y PAGINACIÓN) ---
+        // --- ADMIN: BD Y MEDIA TOTAL DE 4 VALS ---
         async function cargarMatrizGlobal() {
             try {
-                // Nuevo sistema de carga super seguro por POST
                 const response = await enviarA_Google({ accion: "cargar_matriz" }, SCRIPT_URL_DB);
-                if(response.exito) {
-                    datosMatrizGlobal = response.datos.slice(1); 
-                    filtrarMatrizGlobal(); // Aplica filtros vacíos por defecto y pagina
-                }
+                if(response.exito) { datosMatrizGlobal = response.datos.slice(1); filtrarMatrizGlobal(); }
             } catch(e) { document.getElementById('cuerpoMatrizGlobal').innerHTML = `<tr><td colspan="7" class="px-6 py-4 text-center text-red-500 font-bold">Error de conexión.</td></tr>`; }
         }
 
@@ -375,49 +374,70 @@
             const ano = (document.getElementById('filtroAno').value || "").toLowerCase();
             const pie = document.getElementById('filtroPie').value;
 
-            datosFiltradosGlobal = datosMatrizGlobal.filter(fila => {
-                if(!fila[3]) return false; // Evita filas vacías
+            // Filtro por columnas corregidas
+            const arrFiltrado = datosMatrizGlobal.filter(fila => {
+                if(!fila[2]) return false; // Evita filas sin nombre (col 2)
                 const fTxt = fila.join(" ").toLowerCase().includes(txt);
-                const fPos = pos === "" || fila[6] === pos;
-                const fRec = rec === "" || fila[1] === rec;
-                const fAno = ano === "" || (fila[5]||"").toLowerCase().includes(ano);
-                const fPie = pie === "" || fila[10] === pie;
+                const fPos = pos === "" || fila[5] === pos; // Col 5: POS
+                const fRec = rec === "" || fila[0] === rec; // Col 0: REC
+                const fAno = ano === "" || (fila[4]||"").toLowerCase().includes(ano); // Col 4: AÑO
+                const fPie = pie === "" || fila[9] === pie; // Col 9: PIE
                 return fTxt && fPos && fRec && fAno && fPie;
             });
 
-            currentPage = 1;
-            renderizarTablaPaginada();
+            // Agrupación y cálculo de medias reales (VAL1, VAL2, VAL3, VAL4)
+            let jugadoresDic = {};
+            arrFiltrado.forEach(fila => {
+                let nomReal = (fila[2] + " " + (fila[3] || "")).trim();
+                let key = nomReal.toLowerCase();
+                
+                if(!jugadoresDic[key]) jugadoresDic[key] = { filaData: fila, sumNotas: 0, countNotas: 0, nomReal: nomReal };
+                else jugadoresDic[key].filaData = fila; // Siempre se queda con el más reciente
+                
+                // Inspeccionar las 4 columnas de VAL (17, 18, 19, 20)
+                [17, 18, 19, 20].forEach(idx => {
+                    let nStr = (fila[idx]||"").toString().replace(',', '.');
+                    let n = parseFloat(nStr);
+                    if(!isNaN(n)) { jugadoresDic[key].sumNotas += n; jugadoresDic[key].countNotas++; }
+                });
+            });
+
+            // Convertir a Array y Ordenar por la media más alta
+            datosFiltradosGlobal = Object.values(jugadoresDic).sort((a,b) => {
+                const mediaA = a.countNotas > 0 ? (a.sumNotas/a.countNotas) : 0;
+                const mediaB = b.countNotas > 0 ? (b.sumNotas/b.countNotas) : 0;
+                return mediaB - mediaA;
+            });
+
+            currentPage = 1; renderizarTablaPaginada();
         }
 
         function renderizarTablaPaginada() {
-            const cuerpo = document.getElementById('cuerpoMatrizGlobal');
-            cuerpo.innerHTML = '';
-
-            const inicio = (currentPage - 1) * itemsPerPage;
-            const fin = inicio + itemsPerPage;
+            const cuerpo = document.getElementById('cuerpoMatrizGlobal'); cuerpo.innerHTML = '';
+            const inicio = (currentPage - 1) * itemsPerPage; const fin = inicio + itemsPerPage;
             const items = datosFiltradosGlobal.slice(inicio, fin);
 
-            if(items.length === 0) {
-                cuerpo.innerHTML = `<tr><td colspan="7" class="px-6 py-10 text-center text-slate-500">No se encontraron resultados con esos filtros.</td></tr>`;
-            } else {
-                items.forEach(fila => {
-                    let nomComp = fila[3] + " " + (fila[4] || "");
+            if(items.length === 0) cuerpo.innerHTML = `<tr><td colspan="7" class="px-6 py-10 text-center text-slate-500">No hay resultados.</td></tr>`;
+            else {
+                items.forEach(obj => {
+                    let fila = obj.filaData;
                     let colorRec = "bg-slate-200 text-slate-700";
-                    if(fila[1] === "FICHAR") colorRec = "bg-emerald-100 text-emerald-800";
-                    if(fila[1] === "RPC") colorRec = "bg-blue-100 text-blue-800";
-                    if(fila[1] === "NCE") colorRec = "bg-red-100 text-red-800";
+                    if(fila[0] === "FICHAR") colorRec = "bg-emerald-100 text-emerald-800";
+                    if(fila[0] === "RPC") colorRec = "bg-blue-100 text-blue-800";
+                    if(fila[0] === "NCE") colorRec = "bg-red-100 text-red-800";
                     
+                    let mediaText = obj.countNotas > 0 ? (obj.sumNotas / obj.countNotas).toFixed(2) : "-";
+
                     cuerpo.innerHTML += `
                         <tr class="hover:bg-slate-50 border-b">
-                            <td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${colorRec}">${fila[1] || '-'}</span></td>
-                            <td class="px-4 py-3 font-bold text-slate-800">${nomComp}</td>
-                            <td class="px-4 py-3 text-slate-600">${fila[5] || '-'}</td>
-                            <td class="px-4 py-3 font-bold text-slate-700">${fila[6] || '-'}</td>
-                            <td class="px-4 py-3 text-xs text-slate-600 truncate max-w-[150px]">${fila[15] || '-'}</td>
-                            <td class="px-4 py-3 text-slate-700">${fila[10] || '-'}</td>
-                            <td class="px-4 py-3 text-center font-black text-emerald-600">${fila[18] || '-'}</td>
-                        </tr>
-                    `;
+                            <td class="px-4 py-3"><span class="px-2 py-1 rounded text-[10px] font-bold uppercase ${colorRec}">${fila[0] || '-'}</span></td>
+                            <td class="px-4 py-3 font-bold text-slate-800">${obj.nomReal}</td>
+                            <td class="px-4 py-3 text-slate-600">${fila[4] || '-'}</td>
+                            <td class="px-4 py-3 font-bold text-slate-700">${fila[5] || '-'}</td>
+                            <td class="px-4 py-3 text-xs text-slate-600 truncate max-w-[150px]">${fila[14] || '-'}</td>
+                            <td class="px-4 py-3 text-slate-700 text-center">${fila[9] || '-'}</td>
+                            <td class="px-4 py-3 text-center font-black text-emerald-600">${mediaText}</td>
+                        </tr>`;
                 });
             }
             actualizarBotonesPaginacion();
@@ -425,7 +445,7 @@
 
         function actualizarBotonesPaginacion() {
             const totalPages = Math.ceil(datosFiltradosGlobal.length / itemsPerPage) || 1;
-            document.getElementById("txtInfoPaginacion").innerText = `Página ${currentPage} de ${totalPages} (${datosFiltradosGlobal.length} jugadores)`;
+            document.getElementById("txtInfoPaginacion").innerText = `Página ${currentPage} de ${totalPages} (${datosFiltradosGlobal.length} jug)`;
             document.getElementById("btnPrevPage").disabled = currentPage === 1;
             document.getElementById("btnNextPage").disabled = currentPage === totalPages;
         }
@@ -433,11 +453,9 @@
         function cambiarPagina(delta) {
             const totalPages = Math.ceil(datosFiltradosGlobal.length / itemsPerPage) || 1;
             currentPage += delta;
-            if(currentPage < 1) currentPage = 1;
-            if(currentPage > totalPages) currentPage = totalPages;
+            if(currentPage < 1) currentPage = 1; if(currentPage > totalPages) currentPage = totalPages;
             renderizarTablaPaginada();
         }
-
     </script>
 </body>
 </html>
